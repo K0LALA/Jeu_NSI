@@ -265,13 +265,8 @@ class Game:
             
             for waypoint in self.waypoints:
                 if waypoint.tp:
-                    if not self.interieur:
-                        self.interieur = True
-                        self.board = self.init_board("interieurs")
-                    else:
-                        self.board = self.init_board("spawn")
-                        self.interieur = False
-                    waypoint.tp = False
+                        self.board = self.init_board(waypoint.destination)
+                        waypoint.tp = False
 
     def stop(self):
         """
