@@ -101,6 +101,9 @@ class Game:
 
         self.tickspeed = 113
 
+        self.inventaire = {}
+        self.place_inventaire = {}
+
     def init_player(self, position: tuple[int, int], zindex: int):
         self.player = Player(self.web_helper, position)
         self.web_manager.attributs(self.player.id, style={"z-index": zindex})
@@ -207,11 +210,29 @@ class Game:
                                 self.tickspeed += 3
                                 self.board.champs_quete["2_"+str(int(self.player.x//32+1))+"_"+str(int(self.player.y//32+1))] = "assets/tilesets/x16_decorations/x16_decorations_060.png"
                                 self.board.etat_champs[(int(self.player.x//32+1), int(self.player.y//32+1))] = False
+                                if "ble" not in self.place_inventaire:
+                                    self.place_inventaire["ble"] = len(self.place_inventaire)
+                                if "ble" not in self.inventaire:
+                                    self.inventaire["ble"] = 0
+                                if self.inventaire["ble"] < 64:
+                                    self.inventaire["ble"] += 1
+                                self.web_helper.change_text("indice"+str(self.place_inventaire["ble"]+1), str(self.inventaire["ble"]))
+                                if self.inventaire["ble"] == 1:
+                                    self.web_manager.insere("ble", "img", attr={'src':f'../assets/tilesets/x16_decorations/x16_decorations_074.png'}, style={"width": "5em"}, parent="div"+str(self.place_inventaire["ble"]+7))
                             else:
                                 self.web_helper.change_image("2_"+str(int(self.player.x//32+1))+"_"+str(int(self.player.y//32+1)), "assets/tilesets/x16_decorations/x16_decorations_058.png")
                                 self.tickspeed += 3
                                 self.board.champs_quete["2_"+str(int(self.player.x//32+1))+"_"+str(int(self.player.y//32+1))] = "assets/tilesets/x16_decorations/x16_decorations_058.png"
                                 self.board.etat_champs[(int(self.player.x//32+1), int(self.player.y//32+1))] = False
+                                if "carotte" not in self.place_inventaire:
+                                    self.place_inventaire["carotte"] = len(self.place_inventaire)
+                                if "carotte" not in self.inventaire:
+                                    self.inventaire["carotte"] = 0
+                                if self.inventaire["carotte"] < 64:
+                                    self.inventaire["carotte"] += 1
+                                self.web_helper.change_text("indice"+str(self.place_inventaire["carotte"]+1), str(self.inventaire["carotte"]))
+                                if self.inventaire["carotte"] == 1:
+                                    self.web_manager.insere("carotte", "img", attr={'src':f'../assets/tilesets/x16_decorations/x16_decorations_073.png'}, style={"width": "5em"}, parent="div"+str(self.place_inventaire["carotte"]+7))
                 else:
                     self.web_manager.add_class("quete_champs", "pressed")
                 in_range_enemies = []

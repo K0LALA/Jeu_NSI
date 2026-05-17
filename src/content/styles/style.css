@@ -139,6 +139,9 @@ border: 7px inset #000000ad;
 height: 80%;
 width: 20%;
 border: 7px inset #000000ad;
+display: flex;
+align-items: center;
+justify-content: center;
 }
 .ligne {
 height: 30%;
@@ -151,6 +154,9 @@ justify-content: space-around;
 height: 80%;
 width: 16%;
 border: 7px inset #000000ad;
+display: flex;
+align-items: center;
+justify-content: center;
 }
 
 .vie {
@@ -187,4 +193,12 @@ border: 7px inset #000000ad;
 
 .pressed {
     display: none;
+}
+
+.indice {
+    position: relative;
+    top: 40%;
+    left: 65%;
+    font-size: 32px;
+    font-family: "Pixelify Sans", sans-serif;
 }
