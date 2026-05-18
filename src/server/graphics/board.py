@@ -1,6 +1,6 @@
 import sqlite3
 import os # listdir
-from math import ceil, floor
+from math import ceil, floor, randint
 
 import web_helper
 import collision_resolver
@@ -10,6 +10,9 @@ from constants import BOARD_PATH, TILESET_PATH_PLACEHOLDER, BLOCKS_SIZE
 TRANSLATE_AMOUNT = 16
 #enemies_board = []
 npc_board = []
+
+CAROTTES = {"assets/tilesets/x16_decorations/x16_decorations_058.png":"assets/tilesets/x16_decorations/x16_decorations_059.png","assets/tilesets/x16_decorations/x16_decorations_059.png":"assets/tilesets/x16_decorations/x16_decorations_065.png","assets/tilesets/x16_decorations/x16_decorations_065.png":"assets/tilesets/x16_decorations/x16_decorations_066.png","assets/tilesets/x16_decorations/x16_decorations_066.png":"assets/tilesets/x16_decorations/x16_decorations_066.png"}
+BLE = {"assets/tilesets/x16_decorations/x16_decorations_060.png":"assets/tilesets/x16_decorations/x16_decorations_061.png","assets/tilesets/x16_decorations/x16_decorations_061.png":"assets/tilesets/x16_decorations/x16_decorations_067.png","assets/tilesets/x16_decorations/x16_decorations_067.png":"assets/tilesets/x16_decorations/x16_decorations_068.png","assets/tilesets/x16_decorations/x16_decorations_068.png":"assets/tilesets/x16_decorations/x16_decorations_068.png"}
 
 class Board:
     def __init__(self, helper: web_helper.Helper, world: str, collision_resolver: collision_resolver.CollisionResolver, zoom: int = 2):
@@ -62,6 +65,8 @@ class Board:
 
         self.champs_quete = {}
         self.etat_champs = {}
+
+        self.champs = []
 
         # Ajoute les elements pour ce monde precis
         self.base.execute("SELECT layer_index,tileset,tiles_size,collisions FROM layers WHERE world=? ORDER BY layer_index ASC;", (self.world,))
@@ -137,8 +142,9 @@ class Board:
             img_path = TILESET_PATH_PLACEHOLDER.replace("%SET%", self.layers[layer]).replace("%IMG%", tile[2])
             position = (self.zoom * (block_offset[0] + tile[0] * self.tile_pixel_sizes[layer]), self.zoom * (block_offset[1] + tile[1] * self.tile_pixel_sizes[layer]))
             self.helper.add_image_id(img_id, img_path, position, (self.zoom * self.tile_pixel_sizes[layer], self.zoom * self.tile_pixel_sizes[layer]), parent=block_id)
-            if img_path == "assets/tilesets/x16_decorations/x16_decorations_060.png" or img_path == "assets/tilesets/x16_decorations/x16_decorations_061.png" or img_path == "assets/tilesets/x16_decorations/x16_decorations_067.png" or img_path == "assets/tilesets/x16_decorations/x16_decorations_068.png" or img_path == "assets/tilesets/x16_decorations/x16_decorations_058.png" or img_path == "assets/tilesets/x16_decorations/x16_decorations_059.png"  or img_path == "assets/tilesets/x16_decorations/x16_decorations_065.png" or img_path == "assets/tilesets/x16_decorations/x16_decorations_066.png":
-                self.champs_quete[img_id] = img_path
+            if img_path in CAROTTES or in BLE:
+                self.champs += [img_id,block_id,layer,tile[0],tile[1]]
+        # on stock img_id, block_id, layer, tile[0], tile[1]
         for cle in self.champs_quete:
             if self.champs_quete[cle] == "assets/tilesets/x16_decorations/x16_decorations_068.png" or self.champs_quete[cle] == "assets/tilesets/x16_decorations/x16_decorations_066.png" :
                 self.etat_champs[(int(cle.split("_")[1]), int(cle.split("_")[2]))] = True
@@ -367,6 +373,11 @@ class Board:
         self.calculate_shift(w,h)
         self.helper.ws.attributs("tiles", style={"left": str(self.shift[0]) + "px", "top": str(self.shift[1]) + "px"})
         self.update_displayed_blocks()
+    
+    def update_field(self):
+        if randint(1,10) == 1:
+            numtile = randint(0,len(self.champs)-1)
+            pass
 
 
 class EditorBoard(Board):
