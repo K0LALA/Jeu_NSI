@@ -6,6 +6,11 @@ import web_helper
 import collision_resolver
 from constants import BOARD_PATH, TILESET_PATH_PLACEHOLDER, BLOCKS_SIZE, BASE_TILE_SIZE
 
+# La taille d'une tile classique, sans zoom
+TRANSLATE_AMOUNT = 16
+#enemies_board = []
+npc_board = []
+
 class Board:
     def __init__(self, helper: web_helper.Helper, world: str, collision_resolver: collision_resolver.CollisionResolver, zoom: int = 2):
         """
@@ -51,6 +56,13 @@ class Board:
         self.origin = origin[0]
         self.shift = (0,0)
         
+        # Liste les attributs des npc et ennemis
+        self.enemies_board = []
+        self.npc_board = []
+
+        self.champs_quete = {}
+        self.etat_champs = {}
+
         # Ajoute les elements pour ce monde precis
         self.base.execute("SELECT layer_index,tileset,tiles_size,collisions FROM layers WHERE world=? ORDER BY layer_index ASC;", (self.world,))
         layers = self.base.fetchall()
@@ -130,6 +142,21 @@ class Board:
             position = (self.zoom * (block_offset[0] + tile[0] * self.tile_pixel_sizes[layer]), self.zoom * (block_offset[1] + tile[1] * self.tile_pixel_sizes[layer]))
             #self.helper.add_image_id(img_id, img_path, position, (self.zoom * self.tile_pixel_sizes[layer], self.zoom * self.tile_pixel_sizes[layer]), parent=block_id)
             self.helper.ws.draw(block_id, img_path, tile[0] * self.tile_pixel_sizes[layer] * self.zoom, tile[1] * self.tile_pixel_sizes[layer] * self.zoom, self.tile_pixel_sizes[layer] * self.zoom)
+            if img_path == "assets/tilesets/x16_decorations/x16_decorations_060.png" or img_path == "assets/tilesets/x16_decorations/x16_decorations_061.png" or img_path == "assets/tilesets/x16_decorations/x16_decorations_067.png" or img_path == "assets/tilesets/x16_decorations/x16_decorations_068.png" or img_path == "assets/tilesets/x16_decorations/x16_decorations_058.png" or img_path == "assets/tilesets/x16_decorations/x16_decorations_059.png"  or img_path == "assets/tilesets/x16_decorations/x16_decorations_065.png" or img_path == "assets/tilesets/x16_decorations/x16_decorations_066.png":
+                self.champs_quete[img_id] = img_path
+        for cle in self.champs_quete:
+            if self.champs_quete[cle] == "assets/tilesets/x16_decorations/x16_decorations_068.png" or self.champs_quete[cle] == "assets/tilesets/x16_decorations/x16_decorations_066.png" :
+                self.etat_champs[(int(cle.split("_")[1]), int(cle.split("_")[2]))] = True
+            else:
+                self.etat_champs[(int(cle.split("_")[1]), int(cle.split("_")[2]))] = False
+        
+        self.base.execute("SELECT enemy_id,x,y FROM enemies WHERE block_id=?;", (block_id,))
+        for elt in self.base.fetchall():
+            self.enemies_board.append(elt)
+
+        self.base.execute("SELECT npc_id,x,y,npc_image,npc_name FROM NPCs WHERE block_id=?;", (block_id,))
+        for elt in self.base.fetchall():
+            self.npc_board.append(elt)
     
     def add_block(self, layer, block_x, block_y) -> int:
         """

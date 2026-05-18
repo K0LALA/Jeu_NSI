@@ -99,6 +99,70 @@ img {
     display: none;
 }
 
+#menu {
+position: absolute;
+display: flex;
+flex-direction: column;
+justify-content: center;
+gap: 2%;
+left: 25%;
+top: 25%;
+width: 50vw;
+height: 50vh;
+background-color: #808080e8;
+border: 1em inset #000000ad;
+z-index: 100;
+visibility: hidden;
+}
+#div1 {
+height: 30%;
+width: 100%;
+display: flex;
+flex-direction: row;
+}
+#div5 {
+width: 20%;
+height: 100%;
+display: flex;
+align-items: center;
+justify-content: center;
+}
+#div6 {
+width: 80%;
+height: 100%;
+display: flex;
+align-items: center;
+justify-content: space-around;
+}
+#case-menu {
+height: 80%;
+width: 60%;
+border: 7px inset #000000ad;
+}
+.case-first {
+height: 80%;
+width: 20%;
+border: 7px inset #000000ad;
+display: flex;
+align-items: center;
+justify-content: center;
+}
+.ligne {
+height: 30%;
+width: 100%;
+display: flex;
+flex-direction: row;
+justify-content: space-around;
+}
+.case {
+height: 80%;
+width: 16%;
+border: 7px inset #000000ad;
+display: flex;
+align-items: center;
+justify-content: center;
+}
+
 .vie {
     position: absolute;
     top: 0;
@@ -117,4 +181,28 @@ img {
 
 .hit {
     filter: sepia(100%) brightness(0.9) contrast(0.9) hue-rotate(305deg) saturate(8);
+}
+
+#quete_champs {
+    width: 100vw;
+    position: absolute;
+    z-index: 1000;
+    left: 0;
+    bottom: 0;
+    font-size: 64px;
+    text-align: center;
+    font-family: "Pixelify Sans", sans-serif;
+    color: black;
+}
+
+.pressed {
+    display: none;
+}
+
+.indice {
+    position: relative;
+    top: 40%;
+    left: 65%;
+    font-size: 32px;
+    font-family: "Pixelify Sans", sans-serif;
 }

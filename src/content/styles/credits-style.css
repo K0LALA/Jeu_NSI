@@ -107,3 +107,21 @@ p {
 .credits > button {
     color: white;
 }
+
+#menu{
+display: none;
+visibility: hidden;
+}
+
+#quete_champs {
+    position: absolute;
+    z-index: 1000;
+    left: 50%;
+    bottom: 0;
+    font-size: 32px;
+    color: black;
+    background-color: #EAC797;
+    border-radius: 5px;
+    padding: 1em 20em;
+    display: none;
+}

@@ -1,11 +1,14 @@
 <!DOCTYPE html>
 <html lang="fr">
     <head>
-        <meta charset="UTF-8">
-        <meta name="viewport" content="width=device-width, initial-scale=1.0">
-        <link rel="stylesheet" href="../styles/menu-style.css" id="menu">
+        <link rel="stylesheet" href="../styles/menu-style.css" id="linkmenu">
         <link rel="stylesheet" href="../styles/style.css" id="game" disabled>
         <link rel="stylesheet" href="../styles/credits-style.css" id="credits" disabled>
+        <link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Alumni+Sans+Pinstripe:ital@0;1&family=Pixelify+Sans:wght@400..700&display=swap" rel="stylesheet">
+        <meta charset="UTF-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1.0">
         <title>POOcalypse</title>
     </head>
     <body ondragstart="return false;" ondrop="return false;">
@@ -13,9 +16,8 @@
             <source src="../assets/music/musique-menu(1).mp3" type="audio/mpeg">
         </audio>
         <div id="player">
-            
         </div>
-
+        <div id="quete_champs">Appuyez sur C pour récolter</div>
         <p id="action-bar"></p>
 
         <div id="dialogs">
@@ -47,6 +49,50 @@
             </p>
             <button onclick="start_menu();">Menu</button>
         </div>
+        <div id="menu">
+  <div id="div1">
+    <div id="div5">
+      <div id="case-menu div0">
+      </div>
+    </div>
+    <div id="div6">
+      <div id="div7" class="case-first">
+        <p id="indice1" class="indice"></p>
+      </div>
+      <div id="div8" class="case-first">
+        <p id="indice2" class="indice"></p>
+      </div>
+      <div id="div9" class="case-first">
+      </div>
+      <div id="div10" class="case-first">
+      </div>
+    </div>
+  </div>
+  <div id="div2" class="ligne">
+    <div id="div11" class="case">
+    </div>
+    <div id="div12" class="case">
+    </div>
+    <div id="div13" class="case">
+    </div>
+    <div id="div14" class="case">
+    </div>
+    <div id="div15" class="case">
+    </div>
+  </div>
+  <div id="div3" class="ligne">
+    <div id="div16" class="case">
+    </div>
+    <div id="div17" class="case">
+    </div>
+    <div id="div18" class="case">
+    </div>
+    <div id="div19" class="case">
+    </div>
+    <div id="div20" class="case">
+    </div>
+  </div>
+</div>
         <div class="vie" >
             <img src="../assets/misc/heart.png" alt="heart" id="heart1">
             <img src="../assets/misc/heart.png" alt="heart" id="heart2">
@@ -56,16 +102,16 @@
         </div>
     <script>
         function start_game() {
-            document.getElementById("menu").disabled = true;
+            document.getElementById("linkmenu").disabled = true;
             document.getElementById("game").disabled = false;
             document.getElementById("board").hidden = false;
         }
         function start_credits() {
-            document.getElementById("menu").disabled = true;
+            document.getElementById("linkmenu").disabled = true;
             document.getElementById("credits").disabled = false;
         }
         function start_menu() {
-            document.getElementById("menu").disabled = false;
+            document.getElementById("linkmenu").disabled = false;
             document.getElementById("credits").disabled = true;
             const musique = document.getElementById("music");
             musique.muted = false;

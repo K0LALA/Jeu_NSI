@@ -2,6 +2,7 @@ import os # remove
 import time # time
 import threading # Threading
 from math import sqrt
+from random import randint
 
 import wsinter
 import web_helper
@@ -13,6 +14,8 @@ from characters.enemy import Enemy
 from characters.npc import Interactable, Npc
 from inputs.keyboard import Keyboard
 from inputs.mouse import Mouse
+
+import constants
 
 game = None
 
@@ -59,20 +62,24 @@ class Game:
         # Les coordonnées qui lui sont passées sont celles
         self.init_player(self.board.origin, 7)
 
-        # TODO: Gérer les NPC avec les tiles, et les ajouter au fil qu'on se rapproche pour pas avoir tous les NPC ici du monde H24
-        # On crée une lste de NPC pour pouvoir en gérer plusieurs plus facilement
-        self.npc: list[Npc] = []
-        base_npc_1 = Npc(self.web_helper, (-200, -100), "assets/spritesheets/blue_haired_woman/blue_haired_woman_001.png", dialogs="dialog1")
-        base_npc_2 = Npc(self.web_helper, (-150, -250), "assets/spritesheets/blue_haired_woman/blue_haired_woman_009.png", dialogs="dialog2")
-        self.npc.append(base_npc_1)
-        self.npc.append(base_npc_2)
-        self.collision_resolver.add_collider((-250, -150, -150, -50), collision_resolver.INTERACTABLE, base_npc_1)
-        self.collision_resolver.add_collider((-200, -300, -100, -200), collision_resolver.INTERACTABLE, base_npc_2)
 
-        # TODO: De la meme maniere que les NPC, les ajouter avec la map
+        self.zoom = self.board.zoom
+        self.npc: list[Npc] = []
+
+        for npc in self.board.npc_board:
+            position = (npc[1]*constants.BASE_TILE_SIZE*self.zoom, npc[2]*constants.BASE_TILE_SIZE*self.zoom)
+            position_collider = ((npc[1]*constants.BASE_TILE_SIZE*self.zoom)-50, (npc[2]*constants.BASE_TILE_SIZE*self.zoom)-50, (npc[1]*constants.BASE_TILE_SIZE*self.zoom)+50, (npc[2]*constants.BASE_TILE_SIZE*self.zoom)+50)
+            current_npc = Npc(self.web_helper, position, "assets/spritesheets/blue_haired_woman/"+str(npc[3]), dialogs=str(npc[4]))
+            self.collision_resolver.add_collider(position_collider, collision_resolver.INTERACTABLE, current_npc)
+            self.npc.append(current_npc)
+
+        
         self.enemies: list[Enemy] = []
-        base_enemy = Enemy(self.web_helper, (0, 0), "assets/spritesheets/blonde_man/blonde_man_010.png", 3)
-        self.enemies.append(base_enemy)
+
+        for enemy in self.board.enemies_board:
+            position = (enemy[1]*constants.BASE_TILE_SIZE*self.zoom, enemy[2]*constants.BASE_TILE_SIZE*self.zoom)
+            current_enemy = Enemy(self.web_helper, position, "assets/spritesheets/blonde_man/blonde_man_010.png", 50)
+            self.enemies.append(current_enemy)
 
         self.interactable: Interactable = None
 
@@ -81,10 +88,20 @@ class Game:
         # On lance la boucle principale
         self.loop_thread = threading.Thread(target=self.loop)
         self.loop_thread.start()
-        
+
+        self.menu_cooldown = 0.5
+        self.last_menu_time = time.time()
+        self.menu = False
+
+        self.tickspeed = 113
+
+        self.inventaire = {}
+        self.place_inventaire = {}
+
     def init_player(self, position: tuple[int, int], zindex: int):
         self.player = Player(self.web_helper, position)
         self.web_manager.attributs(self.player.id, style={"z-index": zindex})
+
 
     def interact_key_handler(self, key):
         if self.interactable == None or not issubclass(type(self.interactable), Interactable):
@@ -133,6 +150,13 @@ class Game:
                 self.init_player(self.board.origin, 7)
                 self.board.reset_view()
 
+            if "KeyI" in keys and time.time() - self.last_menu_time >= self.menu_cooldown:
+                self.menu = not self.menu
+                self.last_menu_time = time.time()
+                if self.menu == True :
+                    self.web_manager.attributs("menu",{}, style={"visibility": "visible"})
+                else:
+                    self.web_manager.attributs("menu",{}, style={"visibility": "hidden"})
             # On actualise la liste des ennemis en supprimant ceux qui sont morts
             for enemy in self.enemies:
                 if enemy.is_dead():
@@ -140,7 +164,71 @@ class Game:
 
             # Toutes les instructions ici sont mises en pauses lorsqu'un menu est ouvert par le joueur
             new_interactable = -1
-            if self.interactable is None or not self.interactable.is_opened():
+            if (self.interactable is None or not self.interactable.is_opened()) and self.menu == False :
+                x = randint(-44, -37)
+                y = randint(-4, 10)
+                if randint(1, self.tickspeed) == 1 :
+                    if "2_"+str(x)+"_"+str(y) in self.board.champs_quete :
+                        if self.board.champs_quete["2_"+str(x)+"_"+str(y)] == "assets/tilesets/x16_decorations/x16_decorations_060.png" :
+                            self.web_helper.change_image("2_"+str(x)+"_"+str(y), "assets/tilesets/x16_decorations/x16_decorations_061.png")
+                            self.board.champs_quete["2_"+str(x)+"_"+str(y)] = "assets/tilesets/x16_decorations/x16_decorations_061.png"
+                            self.tickspeed -= 1
+                        elif self.board.champs_quete["2_"+str(x)+"_"+str(y)] == "assets/tilesets/x16_decorations/x16_decorations_061.png" :
+                            self.web_helper.change_image("2_"+str(x)+"_"+str(y), "assets/tilesets/x16_decorations/x16_decorations_067.png")
+                            self.board.champs_quete["2_"+str(x)+"_"+str(y)] = "assets/tilesets/x16_decorations/x16_decorations_067.png"
+                            self.tickspeed -= 1
+                        elif self.board.champs_quete["2_"+str(x)+"_"+str(y)] == "assets/tilesets/x16_decorations/x16_decorations_067.png" :
+                            self.web_helper.change_image("2_"+str(x)+"_"+str(y), "assets/tilesets/x16_decorations/x16_decorations_068.png")
+                            self.board.champs_quete["2_"+str(x)+"_"+str(y)] = "assets/tilesets/x16_decorations/x16_decorations_068.png"
+                            self.tickspeed -= 1
+                            self.board.etat_champs[(x,y)] = True
+                        elif self.board.champs_quete["2_"+str(x)+"_"+str(y)] == "assets/tilesets/x16_decorations/x16_decorations_058.png" :
+                            self.web_helper.change_image("2_"+str(x)+"_"+str(y), "assets/tilesets/x16_decorations/x16_decorations_059.png")
+                            self.board.champs_quete["2_"+str(x)+"_"+str(y)] = "assets/tilesets/x16_decorations/x16_decorations_059.png"
+                            self.tickspeed -= 1
+                        elif self.board.champs_quete["2_"+str(x)+"_"+str(y)] == "assets/tilesets/x16_decorations/x16_decorations_059.png" :
+                            self.web_helper.change_image("2_"+str(x)+"_"+str(y), "assets/tilesets/x16_decorations/x16_decorations_065.png")
+                            self.board.champs_quete["2_"+str(x)+"_"+str(y)] = "assets/tilesets/x16_decorations/x16_decorations_065.png"
+                            self.tickspeed -= 1
+                        elif self.board.champs_quete["2_"+str(x)+"_"+str(y)] == "assets/tilesets/x16_decorations/x16_decorations_065.png" :
+                            self.web_helper.change_image("2_"+str(x)+"_"+str(y), "assets/tilesets/x16_decorations/x16_decorations_066.png")
+                            self.board.champs_quete["2_"+str(x)+"_"+str(y)] = "assets/tilesets/x16_decorations/x16_decorations_066.png"
+                            self.tickspeed -= 1
+                            self.board.etat_champs[(x,y)] = True
+                if (int(self.player.x//32+1), int(self.player.y//32+1)) in self.board.etat_champs :
+                    self.web_manager.remove_class("quete_champs", "pressed")
+                    if self.board.etat_champs[int(self.player.x//32+1), int(self.player.y//32+1)] == True :
+                        if "KeyC" in keys :
+                            if int(self.player.y//32+1)%2 == 0:
+                                self.web_helper.change_image("2_"+str(int(self.player.x//32+1))+"_"+str(int(self.player.y//32+1)), "assets/tilesets/x16_decorations/x16_decorations_060.png")
+                                self.tickspeed += 3
+                                self.board.champs_quete["2_"+str(int(self.player.x//32+1))+"_"+str(int(self.player.y//32+1))] = "assets/tilesets/x16_decorations/x16_decorations_060.png"
+                                self.board.etat_champs[(int(self.player.x//32+1), int(self.player.y//32+1))] = False
+                                if "ble" not in self.place_inventaire:
+                                    self.place_inventaire["ble"] = len(self.place_inventaire)
+                                if "ble" not in self.inventaire:
+                                    self.inventaire["ble"] = 0
+                                if self.inventaire["ble"] < 64:
+                                    self.inventaire["ble"] += 1
+                                self.web_helper.change_text("indice"+str(self.place_inventaire["ble"]+1), str(self.inventaire["ble"]))
+                                if self.inventaire["ble"] == 1:
+                                    self.web_manager.insere("ble", "img", attr={'src':f'../assets/tilesets/x16_decorations/x16_decorations_074.png'}, style={"width": "5em"}, parent="div"+str(self.place_inventaire["ble"]+7))
+                            else:
+                                self.web_helper.change_image("2_"+str(int(self.player.x//32+1))+"_"+str(int(self.player.y//32+1)), "assets/tilesets/x16_decorations/x16_decorations_058.png")
+                                self.tickspeed += 3
+                                self.board.champs_quete["2_"+str(int(self.player.x//32+1))+"_"+str(int(self.player.y//32+1))] = "assets/tilesets/x16_decorations/x16_decorations_058.png"
+                                self.board.etat_champs[(int(self.player.x//32+1), int(self.player.y//32+1))] = False
+                                if "carotte" not in self.place_inventaire:
+                                    self.place_inventaire["carotte"] = len(self.place_inventaire)
+                                if "carotte" not in self.inventaire:
+                                    self.inventaire["carotte"] = 0
+                                if self.inventaire["carotte"] < 64:
+                                    self.inventaire["carotte"] += 1
+                                self.web_helper.change_text("indice"+str(self.place_inventaire["carotte"]+1), str(self.inventaire["carotte"]))
+                                if self.inventaire["carotte"] == 1:
+                                    self.web_manager.insere("carotte", "img", attr={'src':f'../assets/tilesets/x16_decorations/x16_decorations_073.png'}, style={"width": "5em"}, parent="div"+str(self.place_inventaire["carotte"]+7))
+                else:
+                    self.web_manager.add_class("quete_champs", "pressed")
                 in_range_enemies = []
                 player_range = self.player.weapon.range
                 for enemy in self.enemies:
