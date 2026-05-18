@@ -67,6 +67,7 @@ class Game:
         self.npc: list[Npc] = []
 
         for npc in self.board.npc_board:
+            print(npc)
             position = (npc[1]*constants.BASE_TILE_SIZE*self.zoom, npc[2]*constants.BASE_TILE_SIZE*self.zoom)
             position_collider = ((npc[1]*constants.BASE_TILE_SIZE*self.zoom)-50, (npc[2]*constants.BASE_TILE_SIZE*self.zoom)-50, (npc[1]*constants.BASE_TILE_SIZE*self.zoom)+50, (npc[2]*constants.BASE_TILE_SIZE*self.zoom)+50)
             current_npc = Npc(self.web_helper, position, "assets/spritesheets/blue_haired_woman/"+str(npc[3]), dialogs=str(npc[4]))
@@ -78,7 +79,7 @@ class Game:
 
         for enemy in self.board.enemies_board:
             position = (enemy[1]*constants.BASE_TILE_SIZE*self.zoom, enemy[2]*constants.BASE_TILE_SIZE*self.zoom)
-            current_enemy = Enemy(self.web_helper, position, "assets/spritesheets/blonde_man/blonde_man_010.png", 50)
+            current_enemy = Enemy(self.web_helper, position, "assets/spritesheets/blonde_man/blonde_man_010.png", 3)
             self.enemies.append(current_enemy)
 
         self.interactable: Interactable = None
@@ -157,6 +158,7 @@ class Game:
                     self.web_manager.attributs("menu",{}, style={"visibility": "visible"})
                 else:
                     self.web_manager.attributs("menu",{}, style={"visibility": "hidden"})
+
             # On actualise la liste des ennemis en supprimant ceux qui sont morts
             for enemy in self.enemies:
                 if enemy.is_dead():
