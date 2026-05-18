@@ -5,6 +5,7 @@ class Weapon:
         self.damage = damage
         self.range = range
         self.cooldown = cooldown
+        self.weapon = ['bow','crossbow','sword']
         # Not used as of right now
         self.durability = durability
 
@@ -15,3 +16,7 @@ class Weapon:
             for target in targets:
                 target.hit(self.damage)
             self.last_attack = time.time()
+
+    def change_weapon(self):
+        pass
+
