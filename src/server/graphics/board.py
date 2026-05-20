@@ -139,7 +139,7 @@ class Board:
             self.helper.add_image_id(img_id, img_path, position, (self.zoom * self.tile_pixel_sizes[layer], self.zoom * self.tile_pixel_sizes[layer]), parent=block_id)
             if img_path == "assets/tilesets/x16_decorations/x16_decorations_060.png" or img_path == "assets/tilesets/x16_decorations/x16_decorations_061.png" or img_path == "assets/tilesets/x16_decorations/x16_decorations_067.png" or img_path == "assets/tilesets/x16_decorations/x16_decorations_068.png" or img_path == "assets/tilesets/x16_decorations/x16_decorations_058.png" or img_path == "assets/tilesets/x16_decorations/x16_decorations_059.png"  or img_path == "assets/tilesets/x16_decorations/x16_decorations_065.png" or img_path == "assets/tilesets/x16_decorations/x16_decorations_066.png":
                 self.champs_quete[img_id] = img_path 
-        
+
         self.base.execute("SELECT enemy_id,x,y FROM enemies WHERE block_id=?;", (block_id,))
         for elt in self.base.fetchall():
             self.enemies_board.append(elt)

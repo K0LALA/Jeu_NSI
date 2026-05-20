@@ -96,6 +96,9 @@ class Game:
         self.web_manager.attributs(self.player.id, style={"z-index": zindex})
 
     def init_board(self, world_name):
+        """
+        initialise la carte en meme temps que le joueur, les npc, les ennemis et les waypoints
+        """
         self.web_helper.ws.remove_children("tiles")
         self.collision_resolver = collision_resolver.CollisionResolver()
         self.board = graphics.board.Board(self.web_helper, world_name, self.collision_resolver)
