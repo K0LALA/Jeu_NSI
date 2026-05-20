@@ -67,7 +67,6 @@ class Game:
         self.npc: list[Npc] = []
 
         for npc in self.board.npc_board:
-            print(npc)
             position = (npc[1]*constants.BASE_TILE_SIZE*self.zoom, npc[2]*constants.BASE_TILE_SIZE*self.zoom)
             position_collider = ((npc[1]*constants.BASE_TILE_SIZE*self.zoom)-50, (npc[2]*constants.BASE_TILE_SIZE*self.zoom)-50, (npc[1]*constants.BASE_TILE_SIZE*self.zoom)+50, (npc[2]*constants.BASE_TILE_SIZE*self.zoom)+50)
             current_npc = Npc(self.web_helper, position, "assets/spritesheets/blue_haired_woman/"+str(npc[3]), dialogs=str(npc[4]))
