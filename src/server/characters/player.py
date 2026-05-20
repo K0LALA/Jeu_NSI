@@ -46,7 +46,7 @@ class Player:
         
         self.health = 5
         self.max_health = 5
-        for i in range(self.health):
+        for i in range(1,self.health+1):
             self.helper.ws.remove_class("heart" + str(i), "heart-hit")
         self.last_heal = time.time()
         self.dead = False
