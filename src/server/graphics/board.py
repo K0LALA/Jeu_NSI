@@ -14,6 +14,8 @@ npc_board = []
 CAROTTES = {"assets/tilesets/x16_decorations/x16_decorations_058.png":"assets/tilesets/x16_decorations/x16_decorations_059.png","assets/tilesets/x16_decorations/x16_decorations_059.png":"assets/tilesets/x16_decorations/x16_decorations_065.png","assets/tilesets/x16_decorations/x16_decorations_065.png":"assets/tilesets/x16_decorations/x16_decorations_066.png","assets/tilesets/x16_decorations/x16_decorations_066.png":"assets/tilesets/x16_decorations/x16_decorations_066.png"}
 BLE = {"assets/tilesets/x16_decorations/x16_decorations_060.png":"assets/tilesets/x16_decorations/x16_decorations_061.png","assets/tilesets/x16_decorations/x16_decorations_061.png":"assets/tilesets/x16_decorations/x16_decorations_067.png","assets/tilesets/x16_decorations/x16_decorations_067.png":"assets/tilesets/x16_decorations/x16_decorations_068.png","assets/tilesets/x16_decorations/x16_decorations_068.png":"assets/tilesets/x16_decorations/x16_decorations_068.png"}
 
+POSITION_CHAMPS = []
+
 class Board:
     def __init__(self, helper: web_helper.Helper, world: str, collision_resolver: collision_resolver.CollisionResolver, zoom: int = 2):
         """
@@ -139,11 +141,12 @@ class Board:
         
         for tile in tiles:
             img_id = "_".join(map(str, [layer, block_x * self.block_size + tile[0], block_y * self.block_size + tile[1]]))
+            if (block_x * self.block_size + tile[0], block_y * self.block_size + tile[1]) not in POSITION_CHAMPS and (img_path in BLE or img_path in CAROTTES):
+                self.champs += [img_id,block_id,img_path,layer,tile[0],tile[1]]
+                POSITION_CHAMPS += (block_x * self.block_size + tile[0], block_y * self.block_size + tile[1])
             img_path = TILESET_PATH_PLACEHOLDER.replace("%SET%", self.layers[layer]).replace("%IMG%", tile[2])
             position = (self.zoom * (block_offset[0] + tile[0] * self.tile_pixel_sizes[layer]), self.zoom * (block_offset[1] + tile[1] * self.tile_pixel_sizes[layer]))
             self.helper.add_image_id(img_id, img_path, position, (self.zoom * self.tile_pixel_sizes[layer], self.zoom * self.tile_pixel_sizes[layer]), parent=block_id)
-            if img_path in CAROTTES or in BLE:
-                self.champs += [img_id,block_id,img_path,layer,tile[0],tile[1]]
         # on stock img_id, block_id, layer, tile[0], tile[1]
         for cle in self.champs_quete:
             if self.champs_quete[cle] == "assets/tilesets/x16_decorations/x16_decorations_068.png" or self.champs_quete[cle] == "assets/tilesets/x16_decorations/x16_decorations_066.png" :
@@ -385,7 +388,10 @@ class Board:
                 self.tickspeed -= 1
             elif path in CAROTTES:
                 path = BLE[path]
-                self.tickspeed
+                self.tickspeed -= 1
+    def remove_field(self,position_player:tuple):
+        if position_player in POSITION_CHAMPS:
+            self.tickspeed += 3
 
 
 class EditorBoard(Board):
