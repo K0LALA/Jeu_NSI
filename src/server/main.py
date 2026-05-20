@@ -99,8 +99,6 @@ class Game:
         self.last_menu_time = time.time()
         self.menu = False
 
-        self.tickspeed = 113
-
         self.inventaire = {}
         self.place_inventaire = {}
 
@@ -163,6 +161,7 @@ class Game:
                     self.web_manager.attributs("menu",{}, style={"visibility": "visible"})
                 else:
                     self.web_manager.attributs("menu",{}, style={"visibility": "hidden"})
+
             # On actualise la liste des ennemis en supprimant ceux qui sont morts
             for enemy in self.enemies:
                 if enemy.is_dead():
@@ -171,7 +170,7 @@ class Game:
             # Toutes les instructions ici sont mises en pauses lorsqu'un menu est ouvert par le joueur
             new_interactable = -1
             if (self.interactable is None or not self.interactable.is_opened()) and self.menu == False :
-                x = randint(-44, -37)
+                """x = randint(-44, -37)
                 y = randint(-4, 10)
                 if randint(1, self.tickspeed) == 1 :
                     if "2_"+str(x)+"_"+str(y) in self.board.champs_quete :
@@ -234,7 +233,7 @@ class Game:
                                 if self.inventaire["carotte"] == 1:
                                     self.web_manager.insere("carotte", "img", attr={'src':f'../assets/tilesets/x16_decorations/x16_decorations_073.png'}, style={"width": "5em"}, parent="div"+str(self.place_inventaire["carotte"]+7))
                 else:
-                    self.web_manager.add_class("quete_champs", "pressed")
+                    self.web_manager.add_class("quete_champs", "pressed")"""
                 in_range_enemies = []
                 player_range = self.player.weapon.range
                 for enemy in self.enemies:

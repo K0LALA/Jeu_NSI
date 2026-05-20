@@ -65,7 +65,7 @@ class Board:
 
         self.champs_quete = {}
         self.etat_champs = {}
-
+        self.tickspeed = 113
         self.champs = []
 
         # Ajoute les elements pour ce monde precis
@@ -143,7 +143,7 @@ class Board:
             position = (self.zoom * (block_offset[0] + tile[0] * self.tile_pixel_sizes[layer]), self.zoom * (block_offset[1] + tile[1] * self.tile_pixel_sizes[layer]))
             self.helper.add_image_id(img_id, img_path, position, (self.zoom * self.tile_pixel_sizes[layer], self.zoom * self.tile_pixel_sizes[layer]), parent=block_id)
             if img_path in CAROTTES or in BLE:
-                self.champs += [img_id,block_id,layer,tile[0],tile[1]]
+                self.champs += [img_id,block_id,img_path,layer,tile[0],tile[1]]
         # on stock img_id, block_id, layer, tile[0], tile[1]
         for cle in self.champs_quete:
             if self.champs_quete[cle] == "assets/tilesets/x16_decorations/x16_decorations_068.png" or self.champs_quete[cle] == "assets/tilesets/x16_decorations/x16_decorations_066.png" :
@@ -375,9 +375,17 @@ class Board:
         self.update_displayed_blocks()
     
     def update_field(self):
-        if randint(1,10) == 1:
+        if randint(1,self.tickspeed) == 1:
             numtile = randint(0,len(self.champs)-1)
-            pass
+            path = self.champs[numtile][2]
+            if path == "assets/tilesets/x16_decorations/x16_decorations_068.png" or path = "assets/tilesets/x16_decorations/x16_decorations_066.png" :
+                pass
+            elif path in BLE:
+                path = BLE[path]
+                self.tickspeed -= 1
+            elif path in CAROTTES:
+                path = BLE[path]
+                self.tickspeed
 
 
 class EditorBoard(Board):
