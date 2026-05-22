@@ -109,7 +109,7 @@ class Game:
         
         for enemy in self.board.enemies_board:
             position = (enemy[1]*constants.BASE_TILE_SIZE*self.zoom, enemy[2]*constants.BASE_TILE_SIZE*self.zoom)
-            current_enemy = Enemy(self.web_helper, position, "assets/spritesheets/blonde_man/blonde_man_010.png", 50)
+            current_enemy = Enemy(self.web_helper, position, "assets/spritesheets/blonde_man/blonde_man_010.png", 3)
             self.enemies.append(current_enemy)
 
         for waypoint in self.board.waypoints_board:
