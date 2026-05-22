@@ -81,7 +81,7 @@ class Board:
             self.rendered_blocks[layer[0]] = set()
             
             # Pour chaque couche, on crée un div
-            self.helper.ws.insere("layer_" + str(layer[0]), "div", style={"z-index": layer[0] * 2}, parent="tiles")
+            self.helper.ws.insere("layer_" + str(layer[0]), "div", style={"z-index": layer[0]}, parent="tiles")
         
         self.load()
         
