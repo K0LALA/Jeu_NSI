@@ -234,6 +234,9 @@ class Game:
                                     self.web_manager.insere("carotte", "img", attr={'src':f'../assets/tilesets/x16_decorations/x16_decorations_073.png'}, style={"width": "5em"}, parent="div"+str(self.place_inventaire["carotte"]+7))
                 else:
                     self.web_manager.add_class("quete_champs", "pressed")"""
+                self.board.update_field()
+                    if "KeyC" in keys :
+                        remove_field(int(self.player.x//32+1), int(self.player.y//32+1))
                 in_range_enemies = []
                 player_range = self.player.weapon.range
                 for enemy in self.enemies:
