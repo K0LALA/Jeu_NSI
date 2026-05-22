@@ -4,7 +4,7 @@ from math import ceil, floor
 
 import web_helper
 import collision_resolver
-from constants import BOARD_PATH, TILESET_PATH_PLACEHOLDER, BLOCKS_SIZE
+from constants import BOARD_PATH, TILESET_PATH_PLACEHOLDER, BLOCKS_SIZE, BASE_TILE_SIZE
 
 # La taille d'une tile classique, sans zoom
 TRANSLATE_AMOUNT = 16
@@ -61,6 +61,7 @@ class Board:
         self.waypoints_board = []
 
         self.champs_quete = {}
+        self.etat_champs = {}
 
         # Ajoute les elements pour ce monde precis
         self.base.execute("SELECT layer_index,tileset,tiles_size,collisions,world FROM layers WHERE world=? ORDER BY layer_index ASC;", (self.world,))
@@ -99,7 +100,7 @@ class Board:
         return self.board_size
     
     def calculate_shift(self, w, h):
-        self.shift = (w / 2 - self.origin[0] * TRANSLATE_AMOUNT, h / 2 - self.origin[1] * TRANSLATE_AMOUNT)
+        self.shift = (w / 2 - self.origin[0] * BASE_TILE_SIZE * self.zoom, h / 2 - self.origin[1] * BASE_TILE_SIZE * self.zoom)
         
     def get_block_id(self, layer: int, block_x: int, block_y: int) -> str:
         """
@@ -129,17 +130,27 @@ class Board:
         tiles = self.base.fetchall()
 
         if len(tiles) > 0:
-            self.helper.ws.insere(block_id, "div", parent="layer_" + str(layer))
+            #self.helper.ws.insere(block_id, "div", parent="layer_" + str(layer))
+            self.helper.ws.insere(block_id, "canvas", \
+                attr={"width":self.block_pixel_sizes[layer] * self.zoom,"height":self.block_pixel_sizes[layer] * self.zoom}, \
+                style={"left":str(block_offset[0] * self.zoom)+"px","top":str(block_offset[1] * self.zoom)+"px"}, \
+                parent="layer_" + str(layer))
             self.rendered_blocks[layer].add((block_x, block_y))
         
         for tile in tiles:
             img_id = "_".join(map(str, [layer, block_x * self.block_size + tile[0], block_y * self.block_size + tile[1]]))
             img_path = TILESET_PATH_PLACEHOLDER.replace("%SET%", self.layers[layer]).replace("%IMG%", tile[2])
             position = (self.zoom * (block_offset[0] + tile[0] * self.tile_pixel_sizes[layer]), self.zoom * (block_offset[1] + tile[1] * self.tile_pixel_sizes[layer]))
-            self.helper.add_image_id(img_id, img_path, position, (self.zoom * self.tile_pixel_sizes[layer], self.zoom * self.tile_pixel_sizes[layer]), parent=block_id)
+            #self.helper.add_image_id(img_id, img_path, position, (self.zoom * self.tile_pixel_sizes[layer], self.zoom * self.tile_pixel_sizes[layer]), parent=block_id)
+            self.helper.ws.draw(block_id, img_path, tile[0] * self.tile_pixel_sizes[layer] * self.zoom, tile[1] * self.tile_pixel_sizes[layer] * self.zoom, self.tile_pixel_sizes[layer] * self.zoom)
             if img_path == "assets/tilesets/x16_decorations/x16_decorations_060.png" or img_path == "assets/tilesets/x16_decorations/x16_decorations_061.png" or img_path == "assets/tilesets/x16_decorations/x16_decorations_067.png" or img_path == "assets/tilesets/x16_decorations/x16_decorations_068.png" or img_path == "assets/tilesets/x16_decorations/x16_decorations_058.png" or img_path == "assets/tilesets/x16_decorations/x16_decorations_059.png"  or img_path == "assets/tilesets/x16_decorations/x16_decorations_065.png" or img_path == "assets/tilesets/x16_decorations/x16_decorations_066.png":
-                self.champs_quete[img_id] = img_path 
-
+                self.champs_quete[img_id] = img_path
+        for cle in self.champs_quete:
+            if self.champs_quete[cle] == "assets/tilesets/x16_decorations/x16_decorations_068.png" or self.champs_quete[cle] == "assets/tilesets/x16_decorations/x16_decorations_066.png" :
+                self.etat_champs[(int(cle.split("_")[1]), int(cle.split("_")[2]))] = True
+            else:
+                self.etat_champs[(int(cle.split("_")[1]), int(cle.split("_")[2]))] = False
+        
         self.base.execute("SELECT enemy_id,x,y FROM enemies WHERE block_id=?;", (block_id,))
         for elt in self.base.fetchall():
             self.enemies_board.append(elt)
@@ -399,7 +410,11 @@ class EditorBoard(Board):
         return self.board_size
     
     def window_size_changed(self):
-        super().window_size_changed()
+        ow,oh = self.board_size
+        w,h = self.update_board_size()
+        self.shift = (self.shift[0] + (w - ow) / 2, self.shift[1] + (h - oh) / 2)
+        self.helper.ws.attributs("tiles", style={"left": str(self.shift[0]) + "px", "top": str(self.shift[1]) + "px"})
+        self.update_displayed_blocks()
         self.helper.ws.attributs("board", style={"background-position-x": str(self.shift[0]) + "px"\
                                                 ,"background-position-y": str(self.shift[1]) + "px"})
     
@@ -444,6 +459,8 @@ class EditorBoard(Board):
         self.layers[int(o[0])] = o[1]
         self.tile_pixel_sizes[int(o[0])] = int(o[2])
         self.block_pixel_sizes[int(o[0])] = int(o[2]) * BLOCKS_SIZE
+        self.collisions[int(o[0])] = bool(o[3])
+        self.rendered_blocks[int(o[0])] = set()
         
         self.base.execute("INSERT INTO layers VALUES (?,?,?,?,?);", (self.world, int(o[0]), o[1], int(o[2]), bool(o[3])))
         self.link.commit()
@@ -485,7 +502,7 @@ class EditorBoard(Board):
         """
         if move == [0, 0]:
             return
-        self.translate((move[0] * TRANSLATE_AMOUNT, move[1] * TRANSLATE_AMOUNT))
+        self.translate((move[0] * BASE_TILE_SIZE, move[1] * BASE_TILE_SIZE))
         self.helper.ws.attributs("board", style={"background-position-x": str(self.shift[0]) + "px"\
                                                 ,"background-position-y": str(self.shift[1]) + "px"})
 
@@ -507,7 +524,10 @@ class EditorBoard(Board):
             self.base.execute("INSERT INTO blocks(world,layer_index,block_x,block_y) VALUES (?,?,?,?);", (self.world, self.layer, block_x, block_y))
             self.base.execute("SELECT block_id FROM blocks WHERE world=? AND layer_index=? AND block_x=? AND block_y=?;", (self.world, self.layer, block_x, block_y))
             block_id = self.base.fetchone()[0]
-            self.helper.ws.insere(block_id, "div", parent="layer_" + str(self.layer))
+            self.helper.ws.insere(block_id, "canvas", \
+                attr={"width":self.block_pixel_sizes[self.layer] * self.zoom,"height":self.block_pixel_sizes[self.layer] * self.zoom}, \
+                style={"left":str(block_x * self.block_pixel_sizes[self.layer] * self.zoom)+"px","top":str(block_y * self.block_pixel_sizes[self.layer] * self.zoom)+"px"}, \
+                parent="layer_" + str(self.layer))
             
         return block_id
     
@@ -528,19 +548,21 @@ class EditorBoard(Board):
         """
         self.base.execute("SELECT COUNT(image_name) FROM tiles WHERE block_id=? AND x=? AND y=?;", (block_id, tile_pos[0], tile_pos[1]))
         res = self.base.fetchall()[0][0]
-        img_id = "_".join(map(str, [self.layer, block_pos[0] * self.block_size + tile_pos[0], block_pos[1] * self.block_size + tile_pos[1]]))
+        path = TILESET_PATH_PLACEHOLDER.replace("%SET%", self.layers[self.layer]).replace("%IMG%", self.tile[:-4])
         if res > 1:
             raise ValueError("Plusieurs tiles existent")
         elif res == 0:
             # On cree une nouvelle tile
             self.base.execute("INSERT INTO tiles VALUES (?,?,?,?);", (block_id, tile_pos[0], tile_pos[1], self.tile[:-4]))
-            position = (self.zoom * (tile_pos[0] * self.tile_pixel_sizes[self.layer]) + block_offsets[0], self.zoom * (tile_pos[1] * self.tile_pixel_sizes[self.layer]) + block_offsets[1])
-            path = TILESET_PATH_PLACEHOLDER.replace("%SET%", self.layers[self.layer]).replace("%IMG%", self.tile[:-4])
-            self.helper.add_image_id(img_id, path, position, (self.zoom * self.tile_pixel_sizes[self.layer], self.zoom * self.tile_pixel_sizes[self.layer]), parent=block_id)
+            self.helper.ws.draw(block_id, path, tile_pos[0] * self.tile_pixel_sizes[self.layer] * self.zoom, tile_pos[1] * self.tile_pixel_sizes[self.layer] * self.zoom, self.tile_pixel_sizes[self.layer] * self.zoom)
         else:
             # On modifie la tile d'avant
-            self.helper.ws.attributs(img_id, attr={'src': "../" + TILESET_PATH_PLACEHOLDER.replace("%SET%", self.layers[self.layer]).replace("%IMG%", self.tile[:-4])})
+            self.helper.ws.draw(block_id, path, tile_pos[0] * self.tile_pixel_sizes[self.layer] * self.zoom, tile_pos[1] * self.tile_pixel_sizes[self.layer] * self.zoom, self.tile_pixel_sizes[self.layer] * self.zoom, clear=True)
             self.base.execute("UPDATE tiles SET image_name = ? WHERE block_id=? AND x=? AND y=?;", (self.tile[:-4], block_id, tile_pos[0], tile_pos[1]))
+            
+    def remove_tile(self, block_id: str, tile_pos: tuple):
+        self.helper.ws.clear_canvas(block_id, tile_pos[0] * self.tile_pixel_sizes[self.layer] * self.zoom, tile_pos[1] * self.tile_pixel_sizes[self.layer] * self.zoom, self.tile_pixel_sizes[self.layer] * self.zoom, self.tile_pixel_sizes[self.layer] * self.zoom)
+        self.base.execute("DELETE FROM tiles WHERE block_id=? AND x=? AND y=?;", (block_id, tile_pos[0], tile_pos[1]))
     
     def adjust_selection(self):
         """
@@ -599,15 +621,12 @@ class EditorBoard(Board):
         block_offset_y = block_y * self.block_pixel_sizes[self.layer] * self.zoom
         
         for _ in range(x_count + 1):
-            
             for _ in range(y_count + 1):
                 if current_block_id == None:
                     continue
                 
-                img_id = "_".join(map(str, [self.layer, block_x * self.block_size + tile_x, block_y * self.block_size + tile_y]))
                 if tile == "__erase__":
-                    self.helper.ws.remove(img_id)
-                    self.base.execute("DELETE FROM tiles WHERE block_id=(SELECT block_id FROM blocks WHERE world=? AND layer_index=? AND block_x=? AND block_y=?) AND x=? AND y=?;", (self.world, self.layer, block_x, block_y, tile_x, tile_y))
+                    self.remove_tile(current_block_id, (tile_x, tile_y))
                 else: 
                     self.add_or_edit_tile(current_block_id, (block_x, block_y), (block_offset_x, block_offset_y), (tile_x, tile_y))
                 
@@ -638,31 +657,19 @@ class EditorBoard(Board):
             
             - click_pos: La position en pixels sur la page du clic
         """
-        def add_tile(block_pos, block_offsets, tile_pos):
+        def add(block_pos, block_offsets, tile_pos):
             """
             Cette methode ajoute une tile a la position donnee sur la page et actualise la base de donnees, elle ajoute un bloc si necessaire
             """
             block_id = self.get_block_id_or_create(block_pos[0], block_pos[1], create=True)
             self.add_or_edit_tile(block_id, block_pos, block_offsets, tile_pos)
                         
-        def remove_tile(block_pos, tile_pos):
+        def remove(block_pos, tile_pos):
             """
             Cette methode supprime la tile specifiee de la page et actualise la base de donnees
             """
             block_id = self.get_block_id_or_create(block_pos[0], block_pos[1])
-            
-            self.base.execute("SELECT COUNT(image_name) FROM tiles WHERE block_id=? AND x=? AND y=?;", (block_id, tile_pos[0], tile_pos[1]))
-            res = self.base.fetchall()[0][0]
-            img_id = "_".join(map(str, [self.layer, block_pos[0] * self.block_size + tile_pos[0], block_pos[1] * self.block_size + tile_pos[1]]))
-            if res > 1:
-                raise ValueError("Pas normal du tout")
-            elif res == 0:
-                return
-        
-            # On modifie la tile d'avant
-            self.helper.ws.remove(img_id)
-            self.base.execute("DELETE FROM tiles WHERE block_id=? AND x=? AND y=?;", (block_id, tile_pos[0], tile_pos[1]))
-
+            self.remove_tile(block_id, tile_pos)
 
         if self.link == None:
             self.link = sqlite3.connect(BOARD_PATH)
@@ -688,11 +695,11 @@ class EditorBoard(Board):
         match self.tool:
             case 'draw':
                 if button == 'L' and self.tile != "":
-                    add_tile((block_x, block_y), (block_offset_x, block_offset_y), (tile_x, tile_y))
+                    add((block_x, block_y), (block_offset_x, block_offset_y), (tile_x, tile_y))
                 elif button == 'R':
-                    remove_tile((block_x, block_y), (tile_x, tile_y))
+                    remove((block_x, block_y), (tile_x, tile_y))
             case 'erase':
-                remove_tile((block_x, block_y), (tile_x, tile_y))
+                remove((block_x, block_y), (tile_x, tile_y))
             case 'select':
                 # Une fois qu'une zone est selectionnee, il suffit d'appuyer sur la gomme ou une tile afin que toute la zone soit affectee par soit la gomme soit une tile
                 pos = ((block_x, block_y), (tile_x, tile_y))
@@ -700,10 +707,10 @@ class EditorBoard(Board):
                 if button == 'L':
                     self.p1 = pos
                     self.helper.ws.remove_class("corner-1", "hidden")
-                    self.helper.ws.attributs("corner-1", style={"left": str(page_pos[0]) + "px", "top": str(page_pos[1]) + "px"})
+                    self.helper.ws.attributs("corner-1", style={"width":str(self.tile_pixel_sizes[self.layer] * self.zoom) + "px", "height": str(self.tile_pixel_sizes[self.layer] * self.zoom) + "px", "left": str(page_pos[0]) + "px", "top": str(page_pos[1]) + "px"})
                 if button == "R":
                     self.p2 = pos
                     self.helper.ws.remove_class("corner-2", "hidden")
-                    self.helper.ws.attributs("corner-2", style={"left": str(page_pos[0]) + "px", "top": str(page_pos[1]) + "px"})
+                    self.helper.ws.attributs("corner-2", style={"width":str(self.tile_pixel_sizes[self.layer] * self.zoom) + "px", "height": str(self.tile_pixel_sizes[self.layer] * self.zoom) + "px", "left": str(page_pos[0]) + "px", "top": str(page_pos[1]) + "px"})
             case _:
                 raise TypeError("Il n'existe pas d'outil de ce type")

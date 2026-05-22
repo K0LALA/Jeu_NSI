@@ -1,7 +1,7 @@
 from math import atan2, sin, cos
 import time
 import web_helper
-from constants import PLAYER_SPRITESHEET_PATH
+from constants import PLAYER_SPRITESHEET_PATH, BASE_TILE_SIZE
 
 from .weapon import Weapon
 from .enemy import Enemy
@@ -35,8 +35,9 @@ class Player:
         self.hitbox = (9, 19, 22, 23)
         self.width = IMG_SIZE
         self.height = IMG_SIZE
-        self.x = map_center[0] - self.width / 2
-        self.y = map_center[1] - self.height / 2
+        # On place le joueur à l'origine, en appliquant la taille d'une tile et le zoom et en le centrant sur lui-même
+        self.x = map_center[0] * BASE_TILE_SIZE * 2 - self.width / 2
+        self.y = map_center[1] * BASE_TILE_SIZE * 2 - self.height / 2
         self.current_anim = ANIM_STOP
         w,h = self.helper.ws.get_window_size()
         self.id = self.helper.add_image(self.current_anim, ((w - self.width) / 2, (h - self.height) / 2), size=(self.width, self.height), parent="player")
@@ -45,12 +46,12 @@ class Player:
         
         self.health = 5
         self.max_health = 5
-        for i in range(self.health):
+        for i in range(1,self.health+1):
             self.helper.ws.remove_class("heart" + str(i), "heart-hit")
         self.last_heal = time.time()
         self.dead = False
 
-        self.weapon = Weapon(10, 40, 0.3)
+        self.weapon = Weapon(1, 40, 0.3)
         
         self.movement_vector = [0, 0]
         self.friction_coef = 0.8

@@ -12,7 +12,8 @@ createLayerButton = document.getElementById("add");
 tileset = document.getElementById("tileset");
 tilesetSelect = document.getElementById("tileset-choice");
 brush = null;
-activeTool = null;
+toolsElement = document.getElementById("tools");
+activeTool = toolsElement.children[0];
 
 worldSelect.addEventListener("change", (event) => {
     // On souhaite garder le premier enfant, sachant que c'est les cases de selection
@@ -113,10 +114,10 @@ add.addEventListener("click", (_) => {
     }
     let tileset = tilesetSelect.value;
     let tileSize = tileSizeInput.value;
-    let collisions = collisionsCheck.value;
-    addLayer([index, tileset, tileSize, collisions]);
-
-    transmettre("create_layer", [index, tileset, tileSize, collisions])
+    let collisions = collisionsCheck.checked;
+    //addLayer([index, tileset, tileSize, collisions]);
+    console.log([index,tileset,tileSize,collisions]);
+    //transmettre("create_layer", [index, tileset, tileSize, collisions])
 });
 
 board.addEventListener("mousemove", (e) => {
@@ -144,7 +145,7 @@ function tool(toolElement, newActiveTool) {
     if (activeTool != null)
     {
         // Si c'est l'outil de sélection et qu'on gomme on veut pas sélectionner l'outil gomme mais effacer la sélection
-        if (activeTool.innerText === "□" && newActiveTool === "erase" && !document.getElementById("corner-1").classList.contains("hidden") && !document.getElementById("corner-2").classList.contains("hidden"))
+        if (activeTool.innerText === "🔳" && newActiveTool === "erase" && !document.getElementById("corner-1").classList.contains("hidden") && !document.getElementById("corner-2").classList.contains("hidden"))
             return;
         activeTool.classList.remove("tool-selected");
     }

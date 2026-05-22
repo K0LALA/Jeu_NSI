@@ -135,7 +135,25 @@ function faire(o){
             continue;
         }
         
-        if (type == "delete")
+        if (type == "draw")
+        {
+            var context = elem.getContext("2d");
+            context.imageSmoothingEnabled = false;
+            var img = new Image;
+            img.src = data["i"];
+            img.onload = function(){
+                if (data["c"]) {
+                    context.clearRect(data["x"], data["y"], data["s"], data["s"]);
+                }
+                context.drawImage(img, data["x"], data["y"], data["s"], data["s"]);
+            };
+        }
+        else if (type == "clear")
+        {
+            var context = elem.getContext("2d");
+            context.clearRect(data["x"], data["y"], data["w"], data["h"]);
+        }
+        else if (type == "delete")
         {
             elem.parentNode.removeChild(elem);
         }
@@ -936,6 +954,12 @@ const ueh = (event) => {
             self._envoi(data)
         else:
             self.pending.append(data)
+            
+    def draw(self,id_objet,img,x,y,size,clear=False):
+        self._push([{"id":id_objet,"type":"draw","data":{"i":"../"+img,"x":x,"y":y,"s":size,"c":clear}}])
+        
+    def clear_canvas(self,id_objet,x,y,w,h):
+        self._push([{"id":id_objet,"type":"clear","data":{"x":x,"y":y,"w":w,"h":h}}])
             
     def add_class(self,id_objet:str,classe:str):
         """

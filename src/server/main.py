@@ -27,9 +27,7 @@ def main():
         lock = open("launched", "x")
         lock.close()
     except FileExistsError:
-        print("Une instance du serveur est deja lancee")
-        exit(0)
-        return
+        raise FileExistsError("Une instance du serveur est deja lancee")
 
     game = Game("index.html")
 
@@ -79,17 +77,10 @@ class Game:
         self.last_menu_time = time.time()
         self.menu = False
 
-        self.etat_champs = {
-                            (-44,-4) : True, (-44,-3) : False, (-44,-2) : False, (-44,-1) : True, (-44,0) : False, (-44,1) : False, (-44,2) : True, (-44,3) : False, (-44,4) : False, (-44,5) : False, (-44,6) : True, (-44,7) : True, (-44,8) : True, (-44,9) : False, (-44,10) : True,
-                            (-43,-4) : True, (-43,-3) : True, (-43,-2) : False, (-43,-1) : False, (-43,0) : False, (-43,1) : True, (-43,2) : False, (-43,3) : True, (-43,4) : False, (-43,5) : False, (-43,6) : False, (-43,7) : False, (-43,8) : False, (-43,9) : False, (-43,10) : False,
-                            (-42,-4) : False, (-42,-3) : False, (-42,-2) : False, (-42,-1) : False, (-42,0) : True, (-42,1) : False, (-42,2) : False, (-42,3) : True, (-42,4) : False, (-42,5) : True, (-42,6) : False, (-42,7) : False, (-42,8) : True, (-42,9) : True, (-42,10) : True,
-                            (-41,-4) : False, (-41,-3) : False, (-41,-2) : False, (-41,-1) : True, (-41,0) : False, (-41,1) : True, (-41,2) : False, (-41,3) : False, (-41,4) : True, (-41,5) : True, (-41,6) : True, (-41,7) : False, (-41,8) : True ,(-41,9) : True, (-41,10) : True,
-                            (-40,-4) : True, (-40,-3) : False, (-40,-2) : True, (-40,-1) : True, (-40,0) : False, (-40,1) : False, (-40,2) : True, (-40,3) : False, (-40,4) : True, (-40,5) : False, (-40,6) : False, (-40,7) : False, (-40,8) : False ,(-40,9) : False, (-40,10) : False,
-                            (-39,-4) : False, (-39,-3) : True, (-39,-2) : True, (-39,-1) : False, (-39,0) : False, (-39,1) : True, (-39,2) : False, (-39,3) : True, (-39,4) : True, (-39,5) : True, (-39,6) : True, (-39,7) : True, (-39,8) : True ,(-39,9) : True, (-39,10) : True,
-                            (-38,-4) : True, (-38,-3) : True, (-38,-2) : False, (-38,-1) : True, (-38,0) : True, (-38,1) : True, (-38,2) : True, (-38,3) : False, (-38,4) : False, (-38,5) : False, (-38,6) : False, (-38,7) : False, (-38,8) : False ,(-38,9) : False, (-38,10) : False,
-                            (-37,-4) : False, (-37,-3) : True, (-37,-2) : True, (-37,-1) : False, (-37,0) : False, (-37,1) : False, (-37,2) : False, (-37,3) : False, (-37,4) : True, (-37,5) : True, (-37,6) : True, (-37,7) : False, (-37,8) : True ,(-37,9) : False, (-37,10) : True
-                            }
-        self.tickspeed = 112
+        self.tickspeed = 113
+
+        self.inventaire = {}
+        self.place_inventaire = {}
 
     def init_player(self, position: tuple[int, int], zindex: int):
         self.player = Player(self.web_helper, position)
@@ -184,6 +175,7 @@ class Game:
                     self.web_manager.attributs("menu",{}, style={"visibility": "visible"})
                 else:
                     self.web_manager.attributs("menu",{}, style={"visibility": "hidden"})
+
             # On actualise la liste des ennemis en supprimant ceux qui sont morts
             for enemy in self.enemies:
                 if enemy.is_dead():
@@ -208,7 +200,7 @@ class Game:
                             self.web_helper.change_image("2_"+str(x)+"_"+str(y), "assets/tilesets/x16_decorations/x16_decorations_068.png")
                             self.board.champs_quete["2_"+str(x)+"_"+str(y)] = "assets/tilesets/x16_decorations/x16_decorations_068.png"
                             self.tickspeed -= 1
-                            self.etat_champs[(x,y)] = True
+                            self.board.etat_champs[(x,y)] = True
                         elif self.board.champs_quete["2_"+str(x)+"_"+str(y)] == "assets/tilesets/x16_decorations/x16_decorations_058.png" :
                             self.web_helper.change_image("2_"+str(x)+"_"+str(y), "assets/tilesets/x16_decorations/x16_decorations_059.png")
                             self.board.champs_quete["2_"+str(x)+"_"+str(y)] = "assets/tilesets/x16_decorations/x16_decorations_059.png"
@@ -221,21 +213,39 @@ class Game:
                             self.web_helper.change_image("2_"+str(x)+"_"+str(y), "assets/tilesets/x16_decorations/x16_decorations_066.png")
                             self.board.champs_quete["2_"+str(x)+"_"+str(y)] = "assets/tilesets/x16_decorations/x16_decorations_066.png"
                             self.tickspeed -= 1
-                            self.etat_champs[(x,y)] = True
-                if (int(self.player.x//32+1), int(self.player.y//32+1)) in self.etat_champs :
+                            self.board.etat_champs[(x,y)] = True
+                if (int(self.player.x//32+1), int(self.player.y//32+1)) in self.board.etat_champs :
                     self.web_manager.remove_class("quete_champs", "pressed")
-                    if self.etat_champs[int(self.player.x//32+1), int(self.player.y//32+1)] == True :
+                    if self.board.etat_champs[int(self.player.x//32+1), int(self.player.y//32+1)] == True :
                         if "KeyC" in keys :
                             if int(self.player.y//32+1)%2 == 0:
                                 self.web_helper.change_image("2_"+str(int(self.player.x//32+1))+"_"+str(int(self.player.y//32+1)), "assets/tilesets/x16_decorations/x16_decorations_060.png")
                                 self.tickspeed += 3
                                 self.board.champs_quete["2_"+str(int(self.player.x//32+1))+"_"+str(int(self.player.y//32+1))] = "assets/tilesets/x16_decorations/x16_decorations_060.png"
-                                self.etat_champs[(int(self.player.x//32+1), int(self.player.y//32+1))] = False
+                                self.board.etat_champs[(int(self.player.x//32+1), int(self.player.y//32+1))] = False
+                                if "ble" not in self.place_inventaire:
+                                    self.place_inventaire["ble"] = len(self.place_inventaire)
+                                if "ble" not in self.inventaire:
+                                    self.inventaire["ble"] = 0
+                                if self.inventaire["ble"] < 64:
+                                    self.inventaire["ble"] += 1
+                                self.web_helper.change_text("indice"+str(self.place_inventaire["ble"]+1), str(self.inventaire["ble"]))
+                                if self.inventaire["ble"] == 1:
+                                    self.web_manager.insere("ble", "img", attr={'src':f'../assets/tilesets/x16_decorations/x16_decorations_074.png'}, style={"width": "5em"}, parent="div"+str(self.place_inventaire["ble"]+7))
                             else:
                                 self.web_helper.change_image("2_"+str(int(self.player.x//32+1))+"_"+str(int(self.player.y//32+1)), "assets/tilesets/x16_decorations/x16_decorations_058.png")
                                 self.tickspeed += 3
                                 self.board.champs_quete["2_"+str(int(self.player.x//32+1))+"_"+str(int(self.player.y//32+1))] = "assets/tilesets/x16_decorations/x16_decorations_058.png"
-                                self.etat_champs[(int(self.player.x//32+1), int(self.player.y//32+1))] = False
+                                self.board.etat_champs[(int(self.player.x//32+1), int(self.player.y//32+1))] = False
+                                if "carotte" not in self.place_inventaire:
+                                    self.place_inventaire["carotte"] = len(self.place_inventaire)
+                                if "carotte" not in self.inventaire:
+                                    self.inventaire["carotte"] = 0
+                                if self.inventaire["carotte"] < 64:
+                                    self.inventaire["carotte"] += 1
+                                self.web_helper.change_text("indice"+str(self.place_inventaire["carotte"]+1), str(self.inventaire["carotte"]))
+                                if self.inventaire["carotte"] == 1:
+                                    self.web_manager.insere("carotte", "img", attr={'src':f'../assets/tilesets/x16_decorations/x16_decorations_073.png'}, style={"width": "5em"}, parent="div"+str(self.place_inventaire["carotte"]+7))
                 else:
                     self.web_manager.add_class("quete_champs", "pressed")
                 in_range_enemies = []

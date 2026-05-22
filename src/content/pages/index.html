@@ -25,7 +25,7 @@
 
             <ul id="choices"></ul>
         </div>
-        <div id="board">
+        <div id="board" hidden>
             <div id="tiles"></div>
         </div>
         <div class="background">
@@ -52,13 +52,15 @@
         <div id="menu">
   <div id="div1">
     <div id="div5">
-      <div id="case-menu">
+      <div id="case-menu div0">
       </div>
     </div>
     <div id="div6">
       <div id="div7" class="case-first">
+        <p id="indice1" class="indice"></p>
       </div>
       <div id="div8" class="case-first">
+        <p id="indice2" class="indice"></p>
       </div>
       <div id="div9" class="case-first">
       </div>
@@ -102,6 +104,7 @@
         function start_game() {
             document.getElementById("linkmenu").disabled = true;
             document.getElementById("game").disabled = false;
+            document.getElementById("board").hidden = false;
         }
         function start_credits() {
             document.getElementById("linkmenu").disabled = true;
@@ -112,7 +115,6 @@
             document.getElementById("credits").disabled = true;
             const musique = document.getElementById("music");
             musique.muted = false;
-
         }
         /*
         document.addEventListener("mousemove",(e) => {

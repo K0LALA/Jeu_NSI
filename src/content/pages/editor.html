@@ -19,7 +19,7 @@
         </div>
 
         <ul id="tools">
-            <li class="tool" onclick="tool(this, 'draw');">🖌️</li>
+            <li class="tool tool-selected" onclick="tool(this, 'draw');">🖌️</li>
             <li class="tool" onclick="tool(this, 'erase');">🧼</li>
             <li class="tool" onclick="tool(this, 'select');">🔳</li>
             <br>
@@ -58,7 +58,7 @@
     
                 <div id="collisions-form">
                     <label class="layer-option-label" for="collisions">Collisions: </label>
-                    <input type="checkbox" name="collisions" id="collisions">
+                    <input type="checkbox" name="collisions" id="collisions" value="false">
                 </div>
 
                 <button id="add">Ajouter</button>

@@ -27,6 +27,10 @@ div > * {
     color: #C9E4CA;
 }
 
+canvas {
+    position: absolute;
+}
+
 #board {
     /* -6px pour le padding de #tileset */
     height: calc(85% - 6px);

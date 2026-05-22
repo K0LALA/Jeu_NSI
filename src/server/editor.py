@@ -19,10 +19,8 @@ def main():
         lock = open("launched", "x")
         lock.close()
     except FileExistsError:
-        print("Une instance du serveur est deja lancee")
-        exit(0)
-        return
-    
+        raise FileExistsError("Une instance du serveur est deja lancee")
+
     editor = Editor(start_page = "editor.html")
     
 def stop():
@@ -89,16 +87,23 @@ class Editor:
     def loop(self):
         self.do_loop = True
         last_loop_time = 0
+        delta_save_time = 0
         
         while self.board == None:
             time.sleep(0.5)
         
+
         while self.do_loop:
             delta_time = time.time() - last_loop_time - 0.01
+            delta_save_time += delta_time + 0.01
             if delta_time < 0:
                 time.sleep(-delta_time / 4)
                 continue
             
+            if delta_save_time > 15 and self.board != None and self.board.link != None:
+                self.board.link.commit()
+                delta_save_time = 0
+
             delta_time += 0.01
             
             window_size = self.web_manager.get_window_size_if_changed()
