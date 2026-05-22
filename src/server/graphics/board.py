@@ -8,8 +8,7 @@ from constants import BOARD_PATH, TILESET_PATH_PLACEHOLDER, BLOCKS_SIZE, BASE_TI
 
 # La taille d'une tile classique, sans zoom
 TRANSLATE_AMOUNT = 16
-#enemies_board = []
-npc_board = []
+
 
 class Board:
     def __init__(self, helper: web_helper.Helper, world: str, collision_resolver: collision_resolver.CollisionResolver, zoom: int = 2):
@@ -56,16 +55,18 @@ class Board:
         self.origin = origin[0]
         self.shift = (0,0)
         
-        # Liste les attributs des npc et ennemis
+        # Liste les attributs des npc, ennemis et waypoints
         self.enemies_board = []
         self.npc_board = []
+        self.waypoints_board = []
 
         self.champs_quete = {}
         self.etat_champs = {}
 
         # Ajoute les elements pour ce monde precis
-        self.base.execute("SELECT layer_index,tileset,tiles_size,collisions FROM layers WHERE world=? ORDER BY layer_index ASC;", (self.world,))
+        self.base.execute("SELECT layer_index,tileset,tiles_size,collisions,world FROM layers WHERE world=? ORDER BY layer_index ASC;", (self.world,))
         layers = self.base.fetchall()
+
         if layers == None:
             print("Ce monde n'a pas de couche!")
             self.link.close()
@@ -127,7 +128,7 @@ class Board:
         block_offset = ((block_x) * self.block_pixel_sizes[layer], (block_y) * self.block_pixel_sizes[layer])
         self.base.execute("SELECT x,y,image_name FROM tiles WHERE block_id=?;", (block_id,))
         tiles = self.base.fetchall()
-        
+
         if len(tiles) > 0:
             #self.helper.ws.insere(block_id, "div", parent="layer_" + str(layer))
             self.helper.ws.insere(block_id, "canvas", \
@@ -157,6 +158,10 @@ class Board:
         self.base.execute("SELECT npc_id,x,y,npc_image,npc_name FROM NPCs WHERE block_id=?;", (block_id,))
         for elt in self.base.fetchall():
             self.npc_board.append(elt)
+
+        self.base.execute("SELECT waypoint_id,x,y,destination FROM waypoints WHERE block_id=?;", (block_id,))
+        for elt in self.base.fetchall():
+            self.waypoints_board.append(elt)
     
     def add_block(self, layer, block_x, block_y) -> int:
         """
@@ -261,7 +266,7 @@ class Board:
         
         min_y = floor(top)
         max_y = ceil(bottom)
-        
+
         for block_x in range(min_x, max_x + 1):
             for block_y in range(min_y, max_y + 1):
                 self.add_block(layer, block_x, block_y)
