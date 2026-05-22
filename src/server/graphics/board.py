@@ -17,8 +17,6 @@ BLE = {"assets/tilesets/x16_decorations/x16_decorations_060.png":"assets/tileset
 
 FIN_CHAMPS = {"assets/tilesets/x16_decorations/x16_decorations_066.png":"assets/tilesets/x16_decorations/x16_decorations_058.png","assets/tilesets/x16_decorations/x16_decorations_068.png":"assets/tilesets/x16_decorations/x16_decorations_060.png"}
 
-POSITION_CHAMPS = []
-
 class Board:
     def __init__(self, helper: web_helper.Helper, world: str, collision_resolver: collision_resolver.CollisionResolver, zoom: int = 2):
         """
@@ -72,6 +70,7 @@ class Board:
         self.etat_champs = {}
         self.tickspeed = 113
         self.champs = []
+        self.POSITION_CHAMPS = []
 
         # Ajoute les elements pour ce monde precis
         self.base.execute("SELECT layer_index,tileset,tiles_size,collisions FROM layers WHERE world=? ORDER BY layer_index ASC;", (self.world,))
@@ -144,10 +143,10 @@ class Board:
         
         for tile in tiles:
             img_id = "_".join(map(str, [layer, block_x * self.block_size + tile[0], block_y * self.block_size + tile[1]]))
-            if (block_x * self.block_size + tile[0], block_y * self.block_size + tile[1]) not in POSITION_CHAMPS and (img_path in BLE or img_path in CAROTTES):
-                self.champs += [img_id,block_id,img_path,layer,tile[0],tile[1]]
-                POSITION_CHAMPS += (block_x * self.block_size + tile[0], block_y * self.block_size + tile[1])
             img_path = TILESET_PATH_PLACEHOLDER.replace("%SET%", self.layers[layer]).replace("%IMG%", tile[2])
+            if (block_x * self.block_size + tile[0], block_y * self.block_size + tile[1]) not in self.POSITION_CHAMPS and (img_path in BLE or img_path in CAROTTES):
+                self.champs += [img_id,block_id,img_path,layer,tile[0],tile[1]]
+                self.POSITION_CHAMPS += (block_x * self.block_size + tile[0], block_y * self.block_size + tile[1])
             position = (self.zoom * (block_offset[0] + tile[0] * self.tile_pixel_sizes[layer]), self.zoom * (block_offset[1] + tile[1] * self.tile_pixel_sizes[layer]))
             self.helper.add_image_id(img_id, img_path, position, (self.zoom * self.tile_pixel_sizes[layer], self.zoom * self.tile_pixel_sizes[layer]), parent=block_id)
         # on stock img_id, block_id, layer, tile[0], tile[1]
@@ -394,8 +393,8 @@ class Board:
                 self.tickspeed -= 1
 
     def remove_field(self,position_player:tuple):
-        for i in range(len(POSITION_CHAMPS)):
-            if position_player in POSITION_CHAMPS[i]:
+        for i in range(len(self.POSITION_CHAMPS)):
+            if position_player in self.POSITION_CHAMPS[i]:
                 if self.champs[i][2] == "assets/tilesets/x16_decorations/x16_decorations_066.png" or self.champs[i][2] == "assets/tilesets/x16_decorations/x16_decorations_068.png":
                     self.champs[i][2] = FIN_CHAMPS[self.champs[i][2]]
                     self.tickspeed += 3
