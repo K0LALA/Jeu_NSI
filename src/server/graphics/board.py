@@ -14,6 +14,8 @@ npc_board = []
 CAROTTES = {"assets/tilesets/x16_decorations/x16_decorations_058.png":"assets/tilesets/x16_decorations/x16_decorations_059.png","assets/tilesets/x16_decorations/x16_decorations_059.png":"assets/tilesets/x16_decorations/x16_decorations_065.png","assets/tilesets/x16_decorations/x16_decorations_065.png":"assets/tilesets/x16_decorations/x16_decorations_066.png","assets/tilesets/x16_decorations/x16_decorations_066.png":"assets/tilesets/x16_decorations/x16_decorations_066.png"}
 BLE = {"assets/tilesets/x16_decorations/x16_decorations_060.png":"assets/tilesets/x16_decorations/x16_decorations_061.png","assets/tilesets/x16_decorations/x16_decorations_061.png":"assets/tilesets/x16_decorations/x16_decorations_067.png","assets/tilesets/x16_decorations/x16_decorations_067.png":"assets/tilesets/x16_decorations/x16_decorations_068.png","assets/tilesets/x16_decorations/x16_decorations_068.png":"assets/tilesets/x16_decorations/x16_decorations_068.png"}
 
+FIN_CHAMPS = {"assets/tilesets/x16_decorations/x16_decorations_066.png":"assets/tilesets/x16_decorations/x16_decorations_058.png","assets/tilesets/x16_decorations/x16_decorations_068.png":"assets/tilesets/x16_decorations/x16_decorations_060.png"}
+
 POSITION_CHAMPS = []
 
 class Board:
@@ -381,7 +383,7 @@ class Board:
         if randint(1,self.tickspeed) == 1:
             numtile = randint(0,len(self.champs)-1)
             path = self.champs[numtile][2]
-            if path == "assets/tilesets/x16_decorations/x16_decorations_068.png" or path = "assets/tilesets/x16_decorations/x16_decorations_066.png" :
+            if path in FIN_CHAMPS :
                 pass
             elif path in BLE:
                 path = BLE[path]
@@ -389,9 +391,13 @@ class Board:
             elif path in CAROTTES:
                 path = BLE[path]
                 self.tickspeed -= 1
+
     def remove_field(self,position_player:tuple):
-        if position_player in POSITION_CHAMPS:
-            self.tickspeed += 3
+        for i in range(len(POSITION_CHAMPS)):
+            if position_player in POSITION_CHAMPS[i]:
+                if self.champs[i][2] == "assets/tilesets/x16_decorations/x16_decorations_066.png" or self.champs[i][2] == "assets/tilesets/x16_decorations/x16_decorations_068.png":
+                    self.champs[i][2] = FIN_CHAMPS[self.champs[i][2]]
+                    self.tickspeed += 3
 
 
 class EditorBoard(Board):
