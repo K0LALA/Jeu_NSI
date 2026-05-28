@@ -115,9 +115,8 @@ add.addEventListener("click", (_) => {
     let tileset = tilesetSelect.value;
     let tileSize = tileSizeInput.value;
     let collisions = collisionsCheck.checked;
-    //addLayer([index, tileset, tileSize, collisions]);
-    console.log([index,tileset,tileSize,collisions]);
-    //transmettre("create_layer", [index, tileset, tileSize, collisions])
+    transmettre("create_layer", [index, tileset, tileSize, collisions]);
+    addLayer([index, tileset, tileSize, collisions]);
 });
 
 board.addEventListener("mousemove", (e) => {
