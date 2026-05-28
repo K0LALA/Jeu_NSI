@@ -4,6 +4,7 @@ html, body {
 
 body {
     height: 100vh;
+    margin: 0;
 }
 
 * {
@@ -13,6 +14,10 @@ body {
 
 canvas {
     position: absolute;
+}
+
+#canvas-characters {
+    z-index: 7;
 }
 
 #tiles {

@@ -28,6 +28,7 @@
         <div id="board" hidden>
             <div id="tiles"></div>
         </div>
+        <canvas id="canvas-characters" style="display:none;"></canvas>
         <div class="background">
             <div class="content">
                 <div>
@@ -100,11 +101,17 @@
             <img src="../assets/misc/heart.png" alt="heart" id="heart4">
             <img src="../assets/misc/heart.png" alt="heart" id="heart5">
         </div>
+        
+    <script src="../scripts/game.js"></script>
     <script>
         function start_game() {
             document.getElementById("linkmenu").disabled = true;
             document.getElementById("game").disabled = false;
             document.getElementById("board").hidden = false;
+
+            // Lance les animations des personnages de game.js
+            charactersCanvas.style["display"] = "block";
+            requestAnimationFrame(updateRender);
         }
         function start_credits() {
             document.getElementById("linkmenu").disabled = true;

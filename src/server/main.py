@@ -9,6 +9,7 @@ import web_helper
 import collision_resolver
 
 import graphics.board
+from characters.character import Character
 from characters.player import Player
 from characters.enemy import Enemy
 from characters.npc import Interactable, Npc
@@ -58,6 +59,8 @@ class Game:
         self.collision_resolver = collision_resolver.CollisionResolver()
         self.board = graphics.board.Board(self.web_helper, "spawn", self.collision_resolver)
         
+        self.splayer = Character(self.web_helper, "player", (150, 150), "player")
+        
         # Pour l'instant, le joueur doit rester en premier, car il a du style sur #img0
         # Les coordonnées qui lui sont passées sont celles
         self.init_player(self.board.origin, 7)
@@ -101,7 +104,6 @@ class Game:
     def init_player(self, position: tuple[int, int], zindex: int):
         self.player = Player(self.web_helper, position)
         self.web_manager.attributs(self.player.id, style={"z-index": zindex})
-
 
     def interact_key_handler(self, key):
         if self.interactable == None or not issubclass(type(self.interactable), Interactable):
