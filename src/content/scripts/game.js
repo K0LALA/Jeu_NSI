@@ -125,7 +125,7 @@ function updateRender(timestamp) {
         requestAnimationFrame(updateRender);
     }
 
-    charactersCanvasContext.clearRect(0, 0, charactersCanvasContext.width, charactersCanvasContext.height);
+    charactersCanvasContext.clearRect(0, 0, charactersCanvas.width, charactersCanvas.height);
 
     deltaTime = timestamp - lastUpdate;
 
