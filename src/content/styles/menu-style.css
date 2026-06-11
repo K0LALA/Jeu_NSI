@@ -28,7 +28,7 @@ body {
 .background::before {
     content: "";
     position: absolute;
-    background-image: url("/content/assets/spritesheets/background_menu/background-jeuimg.png");
+    background-image: url("/content/assets/misc/background.png");
     background-size: cover;
     inset: 0;
     filter: blur(5px);

@@ -137,6 +137,3 @@ function updateRender(timestamp) {
 
     requestAnimationFrame(updateRender);
 }
-
-// TODO: Appeler cette fonction lorsque le menu se ferme
-//requestAnimationFrame(updateRender);
