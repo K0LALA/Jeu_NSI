@@ -99,6 +99,7 @@ class Character {
         this.animationFrameIndex = 0;
         this.animationFrameCount = this.animation.getFrames(this.currentAnimation);
         this.animationDurations = this.animation.getDurations(this.currentAnimation);
+        this.lasted = 0;
     }
 
     changePosition(x, y) {
@@ -109,8 +110,8 @@ class Character {
     tick(dT) {
         let new_lasted = this.lasted + dT;
         if (new_lasted > this.animationDurations[this.animationFrameIndex]) {
-            new_lasted -= this.animationDurations[this.animationFrameIndex];
-            this.animationFrameIndex += Math.floor(new_lasted / this.animationDurations[this.animationFrameIndex]);
+            new_lasted = 0;
+            this.animationFrameIndex += 1;
             this.animationFrameIndex %= this.animationFrameCount;
         }
         this.lasted = new_lasted;

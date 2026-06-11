@@ -59,7 +59,7 @@ class Game:
         self.collision_resolver = collision_resolver.CollisionResolver()
         self.board = graphics.board.Board(self.web_helper, "spawn", self.collision_resolver)
         
-        self.splayer = Character(self.web_helper, "player", (150, 150), "player")
+        self.splayer = Character(self.web_helper, "player", (600, 350), "player")
         
         # Pour l'instant, le joueur doit rester en premier, car il a du style sur #img0
         # Les coordonnées qui lui sont passées sont celles
