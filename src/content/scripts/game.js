@@ -16,10 +16,13 @@ let charactersCanvasContext = charactersCanvas.getContext("2d");
 charactersCanvasContext.imageSmoothingEnabled = false;
 let animationMap = new Map();
 let characterMap = new Map();
+// Liste des personnages triées par rapport à leur position en Y, de la plus grande à la plus petite (BACK: +Y, FRONT: -Y)
+let characterSortedList = new Array();
+sorted = true;
 let lastUpdate = document.timeline.currentTime;
 
 class Animation {
-    constructor(name, spritesheetPath, size, animations, frames, durations) {
+    constructor(name, spritesheetPath, size, frames, durations) {
         this.name = name;
 
         this.spritesheetPath = spritesheetPath;
@@ -27,31 +30,24 @@ class Animation {
         this.spritesheet.src = spritesheetPath;
         this.size = size;
 
-        this.animations = new Map();
-        let i = 0;
-        animations.forEach(animation => {
-            this.animations.set(animation, i);
-            i++;
-        });
         // Liste, donne le nombre de frames pour chaque animation
         this.frames = frames;
         // Liste de listes, donne la durée de chaque frame pour chaque animation
         this.durations = durations
     }
 
-    getFrames(animation) {
-        return this.frames[this.animations.get(animation)];
+    getFrames(animationIndex) {
+        return this.frames[animationIndex];
     }
 
-    getDurations(animation) {
-        return this.durations[this.animations.get(animation)];
+    getDurations(animationIndex) {
+        return this.durations[animationIndex];
     }
 
-    drawFrame(animation, frame, x, y, dstSize) {
+    drawFrame(animationIndex, frame, x, y, dstSize) {
         while (!this.spritesheet.complete) {
             ;
         }
-        let animationIndex = this.animations.get(animation);
         charactersCanvasContext.drawImage(this.spritesheet,
             frame * this.size, animationIndex * this.size, this.size, this.size,
             x, y, dstSize, dstSize
@@ -60,25 +56,27 @@ class Animation {
 }
 
 animationMap.set("player", new Animation("player", "../assets/spritesheets/player.png", 32,
-    ["idle_front", "idle_right", "idle_back", "walk_front", "walk_right", "walk_right", "walk_back", "attack_front", "attack_right", "attack_back", "dead"],
-    [6, 6, 6, 6, 6, 6, 4, 4, 4, 4],
+    [6, 6, 6, 6, 6, 6, 6, 6, 4, 4, 4, 4, 4],
     [   [150, 150, 150, 150, 150, 150],
         [150, 150, 150, 150, 150, 150],
         [150, 150, 150, 150, 150, 150],
         [150, 150, 150, 150, 150, 150],
         [150, 150, 150, 150, 150, 150],
         [150, 150, 150, 150, 150, 150],
+        [150, 150, 150, 150, 150, 150],
+        [150, 150, 150, 150, 150, 150],
         [150, 150, 100, 150],
         [150, 150, 100, 150],
         [150, 150, 100, 150],
-        [150, 150, 150, 200]]))
+        [150, 150, 100, 150],
+        [150, 150, 150, 200]]));
 
 class Character {
     constructor(name, animationName, x, y, size) {
         this.name = name;
 
         this.animation = animationMap.get(animationName);
-        this.currentAnimation = this.animation.animations.keys().next().value;
+        this.currentAnimation = 0;
         this.animationFrameIndex = 0;
         this.animationFrameCount = this.animation.getFrames(this.currentAnimation);
         this.animationDurations = this.animation.getDurations(this.currentAnimation);
@@ -86,25 +84,21 @@ class Character {
         this.x = x;
         this.y = y;
         this.size = size;
-        
+
         // Donne la durée passée sur la frame actuelle
         this.lasted = 0;
     }
 
-    changeAnimation(animation) {
-        if (this.animation.animations.has(animation) == false) {
-            return;
-        }
-        this.currentAnimation = animation;
-        this.animationFrameIndex = 0;
+    /**
+     * Change l'indice de l'animation en cours
+     * @param {number} animationIndex Indice de la nouvelle animation
+     */
+    changeAnimation(animationIndex) {
+        this.currentAnimation = animationIndex;
         this.animationFrameCount = this.animation.getFrames(this.currentAnimation);
         this.animationDurations = this.animation.getDurations(this.currentAnimation);
+        this.animationFrameIndex = 0;
         this.lasted = 0;
-    }
-
-    changePosition(x, y) {
-        this.x = x;
-        this.y = y;
     }
 
     tick(dT) {
@@ -120,9 +114,32 @@ class Character {
     }
 }
 
+// TODO: Ajouter dans wsinter à la place pour éviter les injecte
+function add_character(name, spritesheetPath, x, y, size) {
+    let character = new Character(name, spritesheetPath, x, y, size);
+    characterMap.set(name, character);
+
+    // On ajoute le personnage a la liste triée des personnages
+    characterSortedList.push(character);
+    characterSortedList.sort((a,b) => b.y - a.y);
+}
+
+function change_render(characterName, animation, x, y) {
+    let character = characterMap.get(characterName);
+
+    character.x = x;
+    if (character.y != y) {
+        sorted = false;        
+        character.y = y;
+    }
+
+    if (character.animationIndex != animation) {
+        character.changeAnimation(animation);
+    }
+}
+
 function updateRender(timestamp) {
-    if (!animationMap.values().next().value.spritesheet.complete)
-    {
+    if (!animationMap.values().next().value.spritesheet.complete) {
         requestAnimationFrame(updateRender);
     }
 
@@ -130,7 +147,11 @@ function updateRender(timestamp) {
 
     deltaTime = timestamp - lastUpdate;
 
-    characterMap.forEach(character => {
+    if (!sorted) {
+        characterSortedList.sort((a,b) => b.y - a.y);
+    }
+
+    characterSortedList.forEach(character => {
         character.tick(deltaTime);
     });
 
