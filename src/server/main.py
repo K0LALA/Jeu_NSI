@@ -9,7 +9,6 @@ import web_helper
 import collision_resolver
 
 import graphics.board
-from characters.character import Character
 from characters.player import Player
 from characters.enemy import Enemy
 from characters.npc import Interactable, Npc
@@ -59,10 +58,13 @@ class Game:
         self.collision_resolver = collision_resolver.CollisionResolver()
         self.board = graphics.board.Board(self.web_helper, "spawn", self.collision_resolver)
         
-        self.splayer = Character(self.web_helper, "player", (600, 350), "player")
+        #self.splayer = Character(self.web_helper, "player", (600, 350), "player")
         
         # Pour l'instant, le joueur doit rester en premier, car il a du style sur #img0
         # Les coordonnées qui lui sont passées sont celles
+        self.web_manager.attributs("canvas-characters", style={"z-index": "7"})
+        
+        self.player = None
         self.init_player(self.board.origin, 7)
 
 
@@ -102,8 +104,9 @@ class Game:
         self.place_inventaire = {}
 
     def init_player(self, position: tuple[int, int], zindex: int):
+        del self.player
         self.player = Player(self.web_helper, position)
-        self.web_manager.attributs(self.player.id, style={"z-index": zindex})
+        #self.web_manager.attributs(self.player.id, style={"z-index": zindex})
 
     def interact_key_handler(self, key):
         if self.interactable == None or not issubclass(type(self.interactable), Interactable):
@@ -156,9 +159,9 @@ class Game:
                 self.menu = not self.menu
                 self.last_menu_time = time.time()
                 if self.menu == True :
-                    self.web_manager.attributs("menu",{}, style={"visibility": "visible"})
+                    self.web_manager.attributs("menu", style={"visibility": "visible"})
                 else:
-                    self.web_manager.attributs("menu",{}, style={"visibility": "hidden"})
+                    self.web_manager.attributs("menu", style={"visibility": "hidden"})
 
             # On actualise la liste des ennemis en supprimant ceux qui sont morts
             for enemy in self.enemies:
@@ -244,9 +247,11 @@ class Game:
                     if player_movement != [0, 0]:
                         mov_validate, new_interactable = self.collision_resolver.attempt_movement(self.player.get_boundaries(player_movement), player_movement)
                         if mov_validate:
-                            self.player.render(player_movement)
+                            self.player.valid_pos(player_movement)
                             # Actualiser les blocs rendus sur la carte et scroller si nécessaire
                             self.board.translate(web_helper.multiply_list(player_movement, -1))
+                    else:
+                        self.player.valid_pos(player_movement)
 
             if new_interactable != -1:
                 if new_interactable == None:

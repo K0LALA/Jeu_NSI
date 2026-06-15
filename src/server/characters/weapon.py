@@ -12,6 +12,7 @@ class Weapon:
     
     def attack(self, targets):
         if time.time() - self.last_attack >= self.cooldown:
+            print("attack")
             for target in targets:
                 target.hit(self.damage)
             self.last_attack = time.time()

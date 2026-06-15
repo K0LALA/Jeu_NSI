@@ -81,9 +81,7 @@ class Keyboard:
         Redirige les evenements vers les bons gestionnaires
         """
         if state == "D":
-            # Si la touche n'est pas répétée, pour ne pas l'ajouter plusieurs fois
-            if not key[6]:
-                self.pressed_keys[key[5]] = None
+            self.pressed_keys[key[5]] = key[5] in self.pressed_keys
         elif key[5] in self.pressed_keys.keys():
             del self.pressed_keys[key[5]]
             
@@ -94,8 +92,8 @@ class Keyboard:
         """
         Renvoie un dictionnaire contenant comme cles le code des touches appuyees en cet instant
         
-        Les valeurs sont toutes a None et ne sont pas utilisees
+        Les valeurs sont à True si et seulement si la touche est répétée
         
-        On prend simplement avantage du dictionnaire pour chercher plus facilement si une touche precise est appuyee
+        On prend avantage du dictionnaire pour chercher plus facilement si une touche precise est appuyee
         """
         return self.pressed_keys

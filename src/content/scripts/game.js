@@ -21,6 +21,19 @@ let characterSortedList = new Array();
 sorted = true;
 let lastUpdate = document.timeline.currentTime;
 
+const HIT_FILTERS = "sepia(100%) brightness(0.9) contrast(0.9) hue-rotate(305deg) saturate(8)";
+const HIT_DURATION = 500;
+
+const FRONT = 0;
+const RIGHT = 1;
+const LEFT = 2;
+const BACK = 3;
+
+const IDLE = 0;
+const WALK = 4
+const ATTACK = 8;
+const DIE = 12;
+
 class Animation {
     constructor(name, spritesheetPath, size, frames, durations) {
         this.name = name;
@@ -76,6 +89,7 @@ class Character {
         this.name = name;
 
         this.animation = animationMap.get(animationName);
+        this.lastAnimation = 0; // Utilisé que lors d'une attaque pour savoir vers quelle animation retourner après
         this.currentAnimation = 0;
         this.animationFrameIndex = 0;
         this.animationFrameCount = this.animation.getFrames(this.currentAnimation);
@@ -85,8 +99,11 @@ class Character {
         this.y = y;
         this.size = size;
 
+        this.hit = false;
+        this.hitLasted = 0;
+
         // Donne la durée passée sur la frame actuelle
-        this.lasted = 0;
+        this.frameLasted = 0;
     }
 
     /**
@@ -94,34 +111,71 @@ class Character {
      * @param {number} animationIndex Indice de la nouvelle animation
      */
     changeAnimation(animationIndex) {
+        if (8 <= this.currentAnimation && this.currentAnimation < 12 && this.animationFrameIndex + 1 < this.animationFrameCount) {
+            // Si l'animation voulue n'est pas une attaque, elle viendre après l'attaque
+            if (animationIndex < 8) {
+                this.lastAnimation = animationIndex;
+            }
+            // On change seulement la direction de l'attaque
+            this.currentAnimation = 8 + animationIndex % 4;
+            return;
+        }
         this.currentAnimation = animationIndex;
         this.animationFrameCount = this.animation.getFrames(this.currentAnimation);
         this.animationDurations = this.animation.getDurations(this.currentAnimation);
         this.animationFrameIndex = 0;
-        this.lasted = 0;
+        this.frameLasted = 0;
     }
 
     tick(dT) {
-        let new_lasted = this.lasted + dT;
-        if (new_lasted > this.animationDurations[this.animationFrameIndex]) {
-            new_lasted = 0;
-            this.animationFrameIndex += 1;
-            this.animationFrameIndex %= this.animationFrameCount;
+        if (this.hit) {
+            let newHitLasted = this.hitLasted + dT;
+            if (newHitLasted > HIT_DURATION) {
+                newHitLasted = 0;
+                this.hit = false;
+            }
+            this.hitLasted = newHitLasted;
         }
-        this.lasted = new_lasted;
 
+        let newFrameLasted = this.frameLasted + dT;
+        if (newFrameLasted > this.animationDurations[this.animationFrameIndex]) {
+            newFrameLasted = 0;
+            // Lorsque l'attaque est finie, on revient à l'animation précédente
+            if (8 <= this.currentAnimation && this.currentAnimation < 12 && this.animationFrameIndex + 1 == this.animationFrameCount) {
+                this.changeAnimation(this.lastAnimation);
+            }
+            // On ne veut pas passer à la prochaine frame si l'animation de mort est finie.
+            if (!(this.currentAnimation == 12 && this.animationFrameIndex + 1 == this.animationFrameCount)) {
+                this.animationFrameIndex += 1;
+                this.animationFrameIndex %= this.animationFrameCount;
+            }
+        }
+        this.frameLasted = newFrameLasted;
+
+        if (this.hit) {
+            charactersCanvasContext.filter = HIT_FILTERS;
+        }
         this.animation.drawFrame(this.currentAnimation, this.animationFrameIndex, this.x, this.y, this.size);
+        if (this.hit) {
+            charactersCanvasContext.filter = "none";
+        }
     }
 }
 
 // TODO: Ajouter dans wsinter à la place pour éviter les injecte
-function add_character(name, spritesheetPath, x, y, size) {
-    let character = new Character(name, spritesheetPath, x, y, size);
+function add_character(name, animation, x, y, size) {
+    let character = new Character(name, animation, x, y, size);
     characterMap.set(name, character);
 
     // On ajoute le personnage a la liste triée des personnages
     characterSortedList.push(character);
     characterSortedList.sort((a,b) => b.y - a.y);
+}
+
+function remove_character(name) {
+    let character = characterMap.get(name);
+    characterSortedList = characterSortedList.filter((c) => c != character);
+    characterMap.delete(name);
 }
 
 function change_render(characterName, animation, x, y) {
@@ -136,6 +190,11 @@ function change_render(characterName, animation, x, y) {
     if (character.animationIndex != animation) {
         character.changeAnimation(animation);
     }
+}
+
+function hit_character(name) {
+    let character = characterMap.get(name);
+    character.hit = true;
 }
 
 function updateRender(timestamp) {
