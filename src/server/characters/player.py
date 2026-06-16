@@ -113,11 +113,11 @@ class Player(Character):
         """
         return (self.x, self.y)
     
-    def get_boundaries(self, mov):
+    def get_boundaries(self):
         """
         Renvoie le tuple (X1, Y1, X2, Y2) qui definit la boite de collisions du joueur, attention elle ne correspond pas exactement au visuel du joueur, elle est plus petite
         """
-        return [self.get_position()[i%2] + mov[i%2] + self.hitbox[i] * 2 for i in range(4)]
+        return [self.get_position()[i%2] + self.hitbox[i] * 2 for i in range(4)]
     
     def get_center_pos(self):
         """

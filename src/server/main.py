@@ -245,7 +245,7 @@ class Game:
                 if not self.player.is_dead():
                     player_movement = self.player.update(delta_time, keys, in_range_enemies)
                     if player_movement != [0, 0]:
-                        mov_validate, new_interactable = self.collision_resolver.attempt_movement(self.player.get_boundaries(player_movement), player_movement)
+                        mov_validate, new_interactable = self.collision_resolver.attempt_movement(self.player.get_boundaries(), player_movement)
                         if mov_validate:
                             self.player.valid_pos(player_movement)
                             # Actualiser les blocs rendus sur la carte et scroller si nécessaire
