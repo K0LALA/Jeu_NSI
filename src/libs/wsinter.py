@@ -555,6 +555,7 @@ const ueh = (event) => {
         actions spécifiques à la fermeture du programme, comme des sauvegardes.
         """
 
+        self.injecte("document.querySelector('link[rel~=\"icon\"]').href='../assets/misc/favicon-dead.png'")
         self.injecte("window.removeEventListener('beforeunload',ueh);")
         self.injecte("alert('Python arrêté.');")
 
