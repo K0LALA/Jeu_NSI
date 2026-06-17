@@ -247,11 +247,11 @@ class Game:
                     if player_movement != [0, 0]:
                         mov_validate, new_interactable = self.collision_resolver.attempt_movement(self.player.get_boundaries(), player_movement)
                         if mov_validate:
-                            self.player.valid_pos(player_movement)
+                            self.player.validate_position(player_movement)
                             # Actualiser les blocs rendus sur la carte et scroller si nécessaire
                             self.board.translate(web_helper.multiply_list(player_movement, -1))
                     else:
-                        self.player.valid_pos(player_movement)
+                        self.player.validate_position(player_movement)
 
             if new_interactable != -1:
                 if new_interactable == None:

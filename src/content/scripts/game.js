@@ -68,6 +68,7 @@ class Animation {
     }
 }
 
+// TODO: Utiliser la base de données
 animationMap.set("player", new Animation("player", "../assets/spritesheets/player.png", 32,
     [6, 6, 6, 6, 6, 6, 6, 6, 4, 4, 4, 4, 4],
     [   [125, 125, 125, 125, 125, 125],

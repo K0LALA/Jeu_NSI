@@ -66,10 +66,10 @@ class Enemy:
         return self.dead
 
     def update(self, delta_time: float, player):
-        if self.within_range(player.get_center_pos()):
+        if self.within_range(player.get_center_position()):
             self.attack(player)
         else:
-            self.track_player(player.get_center_pos())
+            self.track_player(player.get_center_position())
             self.x += self.move[0] * delta_time
             self.y += self.move[1] * delta_time
             self.helper.change_dimensions(self.id, (self.x, self.y))

@@ -1,42 +1,22 @@
 from math import atan2, sin, cos
 import time
 import web_helper
-from constants import PLAYER_SPRITESHEET_PATH, BASE_TILE_SIZE
+from constants import BASE_TILE_SIZE
 
 from .character import Character, DIE
-from .weapon import Weapon
 from .enemy import Enemy
-
-
-ANIM_STOP           = PLAYER_SPRITESHEET_PATH + 'player_stop.gif'
-ANIM_LEFT           = PLAYER_SPRITESHEET_PATH + 'player_left.gif'
-ANIM_BOTTOM         = PLAYER_SPRITESHEET_PATH + 'player_bottom.gif'
-ANIM_RIGHT          = PLAYER_SPRITESHEET_PATH + 'player_right.gif'
-ANIM_TOP            = PLAYER_SPRITESHEET_PATH + 'player_top.gif'
-ANIM_DEATH          = PLAYER_SPRITESHEET_PATH + 'player_death.gif'
-ANIM_ATTACK_TOP     = PLAYER_SPRITESHEET_PATH + 'player_attack_top.gif'
-ANIM_ATTACK_BOTTOM  = PLAYER_SPRITESHEET_PATH + 'player_attack_bottom.gif'
-ANIM_ATTACK_RIGHT   = PLAYER_SPRITESHEET_PATH + 'player_attack_right.gif'
-ANIM_ATTACK_LEFT    = PLAYER_SPRITESHEET_PATH + 'player_attack_left.gif'
 
 IMG_SIZE = 64
 MOVE_AMOUNT = 48
-MIN_X = 0
-MIN_Y = 0
-ANIM_ATTACK_DURATION = 0.450    # 0.550
-ANIM_DEATH_DURATION = 0.450     # Dans les faits cette valeur est égale à : 0.650
-                                # Mais comme les updates ne se font pas toutes les nanosecondes, on pourrait dépasser ce temps et l'animation bouclerait, comme un glitch
-                                # Pour éviter cela, on place la fin de l'animation au tout début de la dernière frame
 
 # Contient le joueur
 class Player(Character):
     def __init__(self, helper: web_helper.Helper, map_center: tuple):
-        super().__init__(None, helper, "player", [0, 0], "player", IMG_SIZE)
-        # X1, Y1, X2, Y2 pour l'image dans sa taille originale, il faut appliquer le zoom
-        self.hitbox = (9, 19, 22, 23)
-        # On place le joueur à l'origine, en appliquant la taille d'une tile et le zoom et en le centrant sur lui-même
-        self.x = map_center[0] * BASE_TILE_SIZE * 2 - self.size / 2
-        self.y = map_center[1] * BASE_TILE_SIZE * 2 - self.size / 2
+        
+        position = (map_center[0] * BASE_TILE_SIZE * 2 - IMG_SIZE / 2, \
+                    map_center[1] * BASE_TILE_SIZE * 2 - IMG_SIZE / 2)
+        
+        super().__init__(None, helper, "player", position)
 
         # Ces coordonnées ne changent que lorsque la page change dans self.update_graphics
         w,h = self.helper.ws.get_window_size()
@@ -44,22 +24,16 @@ class Player(Character):
         self.map_y = (h - self.size) / 2
         self.render()
         
-        self.att = False
-        self.delta_sum = 0
-        
-        self.health = 5
-        self.max_health = 5
         for i in range(1,self.health+1):
             self.helper.ws.remove_class("heart" + str(i), "heart-hit")
         self.last_heal = time.time()
-
-        self.weapon = Weapon(1, 40, 0.67)
         
         self.friction_coef = 0.8
         
     def update_graphics(self, window_size):
         self.map_x = (window_size[0] - self.size) / 2
         self.map_y = (window_size[1] - self.size) / 2
+        self.render()
     
     def update(self, delta_time: float, keys: list, enemies: list[Enemy]) -> tuple[float, float]:
         if self.dead:
@@ -107,74 +81,9 @@ class Player(Character):
             move[0] += 1
         return move
     
-    def get_position(self):
-        """
-        Renvoie la position du joueur (x,y) sur la page par rapport a son coin superieur gauche
-        """
-        return (self.x, self.y)
-    
-    def get_boundaries(self):
-        """
-        Renvoie le tuple (X1, Y1, X2, Y2) qui definit la boite de collisions du joueur, attention elle ne correspond pas exactement au visuel du joueur, elle est plus petite
-        """
-        return [self.get_position()[i%2] + self.hitbox[i] * 2 for i in range(4)]
-    
-    def get_center_pos(self):
-        """
-        Renvoie la position du joueur (x,y) sur la page centree sur le joueur
-        """
-        x = int(self.x + self.size / 2)
-        y = int(self.y + self.size / 2)
-        return (x,y)
-        
-    def valid_pos(self, movement_vector):
-        """
-        Actualise la position du joueur sur la page avec le mouvement stocké dans self.movement_vector
-        """
-        self.y += movement_vector[1]
-        self.x += movement_vector[0]
-        self.update_render()
-        # Pas besoin, c'est la map qui le fait, on a cependant toujours besoin de savoir ou est le joueur
-        #self.helper.change_dimensions(self.id, (self.x, self.y))
-        
-    def hit(self, damage: int):
-        """
-        Fait des degats au joueur
-        
-        Parametres:
-            - damage: un entier donnant le nombre de PV que l'attaque doit infliger
-        
-        Renvoie True si le joueur est mort, False sinon
-        """
-        assert type(damage) == int, "Le nombre de dégats donné n'est pas entier"
-        if not self.dead:
-            super().hit(damage)
-            #self.helper.ws.add_tmp_class(self.id, "hit", 750)
-            for i in range(min(5, damage)):
-                self.helper.ws.add_class("heart"+str(self.health - i), "heart-hit")
-            self.health = max(0, self.health - damage)
-            if self.health == 0:
-                self.delta_sum = 0
-                self.action = DIE
-                self.render()
-                self.dead = True
-                #self.helper.change_image(self.id, ANIM_DEATH, True)
-        return self.dead
-    
     def heal(self, cooldown: float):
         if time.time() - self.last_heal >= cooldown:
-            self.health = min(self.health + 1, self.max_health)
+            self.health = min(self.health + 1, self.MAX_HEALTH)
             self.helper.ws.remove_class("heart" + str(self.health), "heart-hit")
             self.last_heal = time.time()
-
-    def attack(self, enemies: list[Enemy]):
-        super().attack()
-        self.weapon.attack(enemies)
-        
-    def is_dead(self):
-        """
-        Renvoie True si le joueur est mort, False sinon
-        """
-        return self.dead
-
         
