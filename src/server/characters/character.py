@@ -80,17 +80,11 @@ class Character:
             raise ValueError("L'arme n'est pas unique ou n'existe pas dans la base de données")
         
         weapon_attributes = weapon_attributes_list[0]
-        self.weapon = Weapon(weapon_attributes[0], weapon_attributes[1], weapon_attributes[2])
+        self.weapon = Weapon(self, weapon_attributes[0], weapon_attributes[1], weapon_attributes[2])
         
         link.close()
         
         self.helper.ws.injecte(f"add_character('{name}', '{attributes[7]}', {self.map_x}, {self.map_y}, {self.size});")
-        
-    def __del__(self):
-        """
-        Cette méthode est appelée lorsque l'instance du personngae est supprimée, si elle n'est plus du côté logique, on la supprime aussi côté client
-        """
-        self.helper.ws.injecte(f"remove_character('{self.name}');")
     
     def calc_map_position(self):
         """
@@ -150,7 +144,7 @@ class Character:
         self.render()
         self.weapon.attack(targets)
         
-    def hit(self, damage: int):
+    def hit(self, damage: int, source = None):
         """
         Fait des dégâts au personnage
         

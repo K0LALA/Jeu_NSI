@@ -165,6 +165,7 @@ class Character {
 
 // TODO: Ajouter dans wsinter à la place pour éviter les injecte
 function add_character(name, animation, x, y, size) {
+    remove_character(name);
     let character = new Character(name, animation, x, y, size);
     characterMap.set(name, character);
 
@@ -174,8 +175,7 @@ function add_character(name, animation, x, y, size) {
 }
 
 function remove_character(name) {
-    let character = characterMap.get(name);
-    characterSortedList = characterSortedList.filter((c) => c != character);
+    characterSortedList = characterSortedList.filter((c) => c.name !== name);
     characterMap.delete(name);
 }
 

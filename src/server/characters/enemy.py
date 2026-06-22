@@ -2,6 +2,8 @@ from math import atan2, sin, cos, sqrt
 import time
 import web_helper
 
+from .weapon import Weapon
+
 IMG_SIZE = 64
 MOVE_AMOUNT = 35
 
@@ -21,6 +23,7 @@ class Enemy:
         self.last_attack = time.time()
         self.cooldown = 1.3
         self.attack_amount = 1
+        self.weapon = Weapon(self, 1, 32, 1.3)
         
         self.movement = (0, 0)
         
@@ -49,11 +52,9 @@ class Enemy:
         return distance <= self.range
         
     def attack(self, player):
-        if time.time() - self.last_attack >= self.cooldown:
-            player.hit(self.attack_amount)
-            self.last_attack = time.time()
+        self.weapon.attack([player])
             
-    def hit(self, damage: int):
+    def hit(self, damage: int, _=None):
         if not self.dead:
             self.helper.ws.add_tmp_class(self.id, "hit", 750)
             self.health -= damage
