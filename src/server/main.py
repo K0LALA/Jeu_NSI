@@ -9,8 +9,9 @@ import web_helper
 import collision_resolver
 
 import graphics.board
+from characters.character import Character
 from characters.player import Player
-from characters.enemy import Enemy
+from characters.enemy import Enemy, Enemy_OLD
 from characters.npc import Interactable, Npc
 from inputs.keyboard import Keyboard
 from inputs.mouse import Mouse
@@ -28,7 +29,11 @@ def main():
     except FileExistsError:
         raise FileExistsError("Une instance du serveur est deja lancee")
 
-    game = Game("index.html")
+    try:
+        game = Game("index.html")
+    except Exception as e:
+        os.remove("launched")
+        raise e
 
 def stop():
     global game
@@ -67,6 +72,7 @@ class Game:
         self.player = None
         self.init_player(self.board.origin, 7)
 
+        #self.slime = Character(self.player, self.web_helper, "slime", (0, 0))
 
         self.zoom = self.board.zoom
         self.npc: list[Npc] = []
@@ -81,10 +87,12 @@ class Game:
         
         self.enemies: list[Enemy] = []
 
-        for enemy in self.board.enemies_board:
+        """for enemy in self.board.enemies_board:
             position = (enemy[1]*constants.BASE_TILE_SIZE*self.zoom, enemy[2]*constants.BASE_TILE_SIZE*self.zoom)
-            current_enemy = Enemy(self.web_helper, position, "assets/spritesheets/blonde_man/blonde_man_010.png", 3)
-            self.enemies.append(current_enemy)
+            current_enemy = Enemy_OLD(self.web_helper, position, "assets/spritesheets/blonde_man/blonde_man_010.png", 3)
+            self.enemies.append(current_enemy)"""
+            
+        self.enemies.append(Enemy(self.player, self.web_helper, "slime", (-340, -340)))
 
         self.interactable: Interactable = None
 
@@ -152,6 +160,7 @@ class Game:
             
             if 'KeyP' in keys and self.player.is_dead():
                 self.web_manager.remove_children("player")
+                self.player.remove()
                 self.init_player(self.board.origin, 7)
                 self.board.reset_view()
 
@@ -166,6 +175,7 @@ class Game:
             # On actualise la liste des ennemis en supprimant ceux qui sont morts
             for enemy in self.enemies:
                 if enemy.is_dead():
+                    enemy.remove()
                     self.enemies.remove(enemy)
 
             # Toutes les instructions ici sont mises en pauses lorsqu'un menu est ouvert par le joueur
@@ -237,16 +247,23 @@ class Game:
                     self.web_manager.add_class("quete_champs", "pressed")
                 in_range_enemies = []
                 player_range = self.player.weapon.range
+                enemy: Enemy
                 for enemy in self.enemies:
-                    enemy.update(delta_time, self.player)
+                    enemy_movement = enemy.update(delta_time, self.player)
+                    if enemy_movement != [0, 0]:
+                        move_validate,_ = self.collision_resolver.attempt_movement(enemy.get_boundaries(), enemy_movement)
+                        if move_validate:
+                            enemy.validate_position(enemy_movement)
+                    else:
+                        enemy.validate_position(enemy_movement)
                     dst = sqrt((enemy.x - self.player.x) ** 2 + (enemy.y - self.player.y) ** 2)
                     if dst <= player_range:
                         in_range_enemies.append(enemy)
                 if not self.player.is_dead():
                     player_movement = self.player.update(delta_time, keys, in_range_enemies)
                     if player_movement != [0, 0]:
-                        mov_validate, new_interactable = self.collision_resolver.attempt_movement(self.player.get_boundaries(), player_movement)
-                        if mov_validate:
+                        move_validate, new_interactable = self.collision_resolver.attempt_movement(self.player.get_boundaries(), player_movement)
+                        if move_validate:
                             self.player.validate_position(player_movement)
                             # Actualiser les blocs rendus sur la carte et scroller si nécessaire
                             self.board.translate(web_helper.multiply_list(player_movement, -1))

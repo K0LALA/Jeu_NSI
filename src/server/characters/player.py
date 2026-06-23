@@ -3,39 +3,51 @@ import time
 import web_helper
 from constants import BASE_TILE_SIZE
 
-from .character import Character, DIE
-from .enemy import Enemy
-
-IMG_SIZE = 64
-MOVE_AMOUNT = 48
+from .character import Character, FRONT, IDLE
+from .enemy import Enemy_OLD
 
 # Contient le joueur
 class Player(Character):
-    def __init__(self, helper: web_helper.Helper, map_center: tuple):
+    def __init__(self, helper: web_helper.Helper, map_center: tuple):        
+        self.helper = helper
+        self.name = "player"
         
-        position = (map_center[0] * BASE_TILE_SIZE * 2 - IMG_SIZE / 2, \
-                    map_center[1] * BASE_TILE_SIZE * 2 - IMG_SIZE / 2)
+        self.fetch_attributes()
         
-        super().__init__(None, helper, "player", position)
+        self.x = map_center[0] * BASE_TILE_SIZE * 2 - self.size / 2
+        self.y = map_center[1] * BASE_TILE_SIZE * 2 - self.size / 2
+        
+        self.direction = FRONT
+        self.action = IDLE
+        self.movement_vector = [0,0]
+        self.friction_coef = 0.8
+        
+        self.dead = False
 
         # Ces coordonnées ne changent que lorsque la page change dans self.update_graphics
         w,h = self.helper.ws.get_window_size()
         self.map_x = (w - self.size) / 2
         self.map_y = (h - self.size) / 2
-        self.render()
+        self.initialize(self.animation)
         
         for i in range(1,self.health+1):
             self.helper.ws.remove_class("heart" + str(i), "heart-hit")
         self.last_heal = time.time()
         
-        self.friction_coef = 0.8
-        
+    def initialize(self, animation):
+        self.helper.ws._push([{"id":"canvas-characters","type":"add_ch","data":{"name":self.name,"animation":animation,"x":self.x,"y":self.y,"size":self.size}}])      
+    
     def update_graphics(self, window_size):
         self.map_x = (window_size[0] - self.size) / 2
         self.map_y = (window_size[1] - self.size) / 2
         self.render()
+        
+    def render(self):
+        if self.dead:
+            return
+        self.helper.ws._push([{"id":"canvas-characters","type":"change_ch","data":{"name":self.name,"animation":min(12, self.direction+self.action),"x":self.x,"y":self.y}}])
     
-    def update(self, delta_time: float, keys: list, enemies: list[Enemy]) -> tuple[float, float]:
+    def update(self, delta_time: float, keys: list, enemies: list[Enemy_OLD]) -> tuple[float, float]:
         if self.dead:
             return [0,0]
         
@@ -58,7 +70,7 @@ class Player(Character):
         movement_direction = self._process_move_keys(keys)
         if movement_direction != [0, 0]:
             angle = atan2(movement_direction[1], movement_direction[0])
-            movement = (cos(angle) * MOVE_AMOUNT * delta_time * 2, sin(angle) * MOVE_AMOUNT * delta_time * 2)
+            movement = (cos(angle) * self.speed * delta_time * 2, sin(angle) * self.speed * delta_time * 2)
             self.movement_vector[0] += movement[0]
             self.movement_vector[1] += movement[1]
         

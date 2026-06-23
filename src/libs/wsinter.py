@@ -191,8 +191,28 @@ function faire(o){
         {
             for (sattr in data["style"])
             {
-                elem.style[sattr] = data["style"][sattr]; 
+                elem.style[sattr] = data["style"][sattr];
             }
+        }
+        else if (type == "add_ch")
+        {
+            add_character(data["name"], data["animation"], data["x"], data["y"], data["size"]);
+        }
+        else if (type == "remove_ch")
+        {
+            remove_character(data["name"]);
+        }
+        else if (type == "change_ch")
+        {
+            change_render(data["name"], data["animation"]);
+        }
+        else if (type == "move_ch")
+        {
+            move(data["name"], data["x"], data["y"]);
+        }
+        else if (type == "hit_ch")
+        {
+            hit_character(data["name"]);
         }
         else {
             console.log("Couldn't handle the request. Type: " + type);

@@ -2,12 +2,35 @@ from math import atan2, sin, cos, sqrt
 import time
 import web_helper
 
+from .character import Character
 from .weapon import Weapon
 
 IMG_SIZE = 64
 MOVE_AMOUNT = 35
 
-class Enemy:
+class Enemy(Character):
+    def track_player(self, player_position: tuple[int], delta_time: float):
+        center_position = self.get_center_position()
+        dX = player_position[0] - center_position[0]
+        dY = player_position[1] - center_position[1]
+        angle = atan2(dY, dX)
+        self.movement_vector = [cos(angle) * self.speed * delta_time, sin(angle) * self.speed * delta_time]
+
+    def within_range(self, player_position: tuple[int]):
+        center_position = self.get_center_position()
+        distance_squared = (player_position[0] - center_position[0]) ** 2
+        distance_squared += (player_position[1] - center_position[1]) ** 2
+        return distance_squared <= self.weapon.range ** 2
+    
+    def update(self, delta_time: float, player):
+        if self.within_range(player.get_center_position()):
+            self.attack([player])
+            self.movement_vector = [0, 0]
+        else:
+            self.track_player(player.get_center_position(), delta_time)
+        return self.movement_vector
+
+class Enemy_OLD:
     def __init__(self, web_helper: web_helper.Helper, position: tuple, img_path: str, health: int):
         self.helper = web_helper
         

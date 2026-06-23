@@ -20,6 +20,7 @@ let characterMap = new Map();
 let characterSortedList = new Array();
 sorted = true;
 let lastUpdate = document.timeline.currentTime;
+let player = null;
 
 const HIT_FILTERS = "sepia(100%) brightness(0.9) contrast(0.9) hue-rotate(305deg) saturate(8)";
 const HIT_DURATION = 500;
@@ -34,8 +35,8 @@ const WALK = 4
 const ATTACK = 8;
 const DIE = 12;
 
-class Animation {
-    constructor(name, spritesheetPath, size, frames, durations) {
+class AnimationProperties {
+    constructor(name, spritesheetPath, size, availableAnimations, frames, durations) {
         this.name = name;
 
         this.spritesheetPath = spritesheetPath;
@@ -43,6 +44,7 @@ class Animation {
         this.spritesheet.src = spritesheetPath;
         this.size = size;
 
+        this.availableAnimations = availableAnimations;
         // Liste, donne le nombre de frames pour chaque animation
         this.frames = frames;
         // Liste de listes, donne la durée de chaque frame pour chaque animation
@@ -50,11 +52,11 @@ class Animation {
     }
 
     getFrames(animationIndex) {
-        return this.frames[animationIndex];
+        return this.frames[this.availableAnimations[animationIndex]];
     }
 
     getDurations(animationIndex) {
-        return this.durations[animationIndex];
+        return this.durations[this.availableAnimations[animationIndex]];
     }
 
     drawFrame(animationIndex, frame, x, y, dstSize) {
@@ -62,14 +64,15 @@ class Animation {
             ;
         }
         charactersCanvasContext.drawImage(this.spritesheet,
-            frame * this.size, animationIndex * this.size, this.size, this.size,
+            frame * this.size, this.availableAnimations[animationIndex] * this.size, this.size, this.size,
             x, y, dstSize, dstSize
         )
     }
 }
 
 // TODO: Utiliser la base de données
-animationMap.set("player", new Animation("player", "../assets/spritesheets/player.png", 32,
+animationMap.set("player", new AnimationProperties("player", "../assets/spritesheets/player.png", 32,
+    [0, 1, 2, 3, 4, 5, 6, 7, 8,9 , 10, 11, 12],
     [6, 6, 6, 6, 6, 6, 6, 6, 4, 4, 4, 4, 4],
     [   [125, 125, 125, 125, 125, 125],
         [125, 125, 125, 125, 125, 125],
@@ -85,6 +88,13 @@ animationMap.set("player", new Animation("player", "../assets/spritesheets/playe
         [125, 125, 100, 125],
         [125, 125, 125, 200]]));
 
+animationMap.set("slime", new AnimationProperties("slime", "../assets/spritesheets/slime.png", 64,
+    [0, 0, 0, 0, 1, 1, 1, 1, 1, 1, 1, 1, 2],
+    [4, 8, 8],
+    [[250, 200, 225, 250],
+    [150, 150, 175, 75, 100, 100, 100, 150],
+    [100, 50, 50, 50, 50, 50, 100, 100]]));
+    
 class Character {
     constructor(name, animationName, x, y, size) {
         this.name = name;
@@ -156,17 +166,29 @@ class Character {
         if (this.hit) {
             charactersCanvasContext.filter = HIT_FILTERS;
         }
-        this.animation.drawFrame(this.currentAnimation, this.animationFrameIndex, this.x, this.y, this.size);
+        let x = this.x;
+        let y = this.y;
+        if (this.name !== "player") {
+            x = x - player.x + (window.innerWidth - this.size) / 2
+            y = y - player.y + (window.innerHeight - this.size) / 2
+        }
+        else {
+            x = (window.innerWidth  - this.size) / 2
+            y = (window.innerHeight - this.size) / 2
+        }
+        this.animation.drawFrame(this.currentAnimation, this.animationFrameIndex, x, y, this.size);
         if (this.hit) {
             charactersCanvasContext.filter = "none";
         }
     }
 }
 
-// TODO: Ajouter dans wsinter à la place pour éviter les injecte
 function add_character(name, animation, x, y, size) {
     remove_character(name);
     let character = new Character(name, animation, x, y, size);
+    if (name === "player") {
+        player = character;
+    }
     characterMap.set(name, character);
 
     // On ajoute le personnage a la liste triée des personnages
@@ -179,17 +201,21 @@ function remove_character(name) {
     characterMap.delete(name);
 }
 
-function change_render(characterName, animation, x, y) {
+function change_render(characterName, animation) {
+    let character = characterMap.get(characterName);
+
+    if (character.animationIndex != animation) {
+        character.changeAnimation(animation);
+    }
+}
+
+function move(characterName, x ,y) {
     let character = characterMap.get(characterName);
 
     character.x = x;
     if (character.y != y) {
-        sorted = false;        
+        sorted = false;
         character.y = y;
-    }
-
-    if (character.animationIndex != animation) {
-        character.changeAnimation(animation);
     }
 }
 
@@ -208,7 +234,7 @@ function updateRender(timestamp) {
     deltaTime = timestamp - lastUpdate;
 
     if (!sorted) {
-        characterSortedList.sort((a,b) => b.y - a.y);
+        characterSortedList.sort((a,b) => a.y - b.y);
     }
 
     characterSortedList.forEach(character => {

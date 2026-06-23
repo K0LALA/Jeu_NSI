@@ -42,8 +42,6 @@ class Character:
         self.name = name
         # Position logique utilisée notamment pour les collisions
         self.x, self.y = position
-        # Position du personnage sur la carte, elle dépend de celle du joueur
-        self.map_x = self.map_y = 0
         
         self.movement_vector = [0, 0]
         self.direction = FRONT
@@ -51,25 +49,32 @@ class Character:
         
         self.dead = False
 
+        self.fetch_attributes()
+        
+        self.initialize(self.animation)
+    
+    def fetch_attributes(self):
         link = sqlite3.connect(CHARACTERS_PATH)
         base = link.cursor()
         
-        base.execute("SELECT * FROM character WHERE name=?;", (name,))
+        base.execute("SELECT * FROM character WHERE name=?;", (self.name,))
         
         attributes_list = base.fetchall()
         if len(attributes_list) != 1:
             raise ValueError("Le personnage n'est pas unique ou n'existe pas dans la base de données")
         
         
-        # w, h, hx1, hy1, hx2, hy2, tileset, health, weapon
+        # name, w, h, hx1, hy1, hx2, hy2, tileset, health, weapon, speed
         attributes = attributes_list[0]
-        if len(attributes) != 10:
-            raise ValueError("Le nombre d'attributs n'est pas le bon, 10 sont attendus.")
+        if len(attributes) != 11:
+            raise ValueError("Le nombre d'attributs n'est pas le bon, 11 sont attendus.")
         
         if attributes[1] != attributes[2]: raise ValueError("La taille du personnage ne représente pas un carré")
         
         self.size = attributes[1]
         self.hitbox = (attributes[3], attributes[4], attributes[5], attributes[6])
+        
+        self.animation = attributes[7]
         
         self.health = self.MAX_HEALTH = attributes[8]
         
@@ -82,31 +87,24 @@ class Character:
         weapon_attributes = weapon_attributes_list[0]
         self.weapon = Weapon(self, weapon_attributes[0], weapon_attributes[1], weapon_attributes[2])
         
-        link.close()
+        self.speed = attributes[10]
         
-        self.helper.ws.injecte(f"add_character('{name}', '{attributes[7]}', {self.map_x}, {self.map_y}, {self.size});")
+        link.close()
     
-    def calc_map_position(self):
-        """
-        Calcule la position du personnage sur la carte, elle dépend de cele du joueur et de la taille de la fenêtre
-        """
-        assert self.player != None, "self.player n'est pas initialisé"
-        w, h = self.helper.ws.get_window_size()
-        # On récupère la position du joueur
-        self.map_x = (w - self.size) / 2 + (self.player.x) - self.x
-        self.map_y = (h - self.size) / 2 + (self.player.y) - self.y
+    def initialize(self, animation):
+        self.helper.ws._push([{"id":"canvas-characters","type":"add_ch","data":{"name":self.name,"animation":animation,"x":self.x,"y":self.y,"size":self.size}}])
+    
+    def remove(self):
+        self.helper.ws._push([{"id":"canvas-characters","type":"remove_ch","data":{"name":self.name}}])
     
     def render(self):
         """
         Change l'animation côté client
         """
-        # Si le joueur est mort, on ne change pas son animation
+        # Si le personnage est mort, on ne change pas son animation
         if self.dead:
             return
-        # On veut pas faire ça pour le joueur, celle-ci est déjà calculée dans le constructeur du joueur
-        if self.name != "player":
-            self.calc_map_position()
-        self.helper.ws.injecte(f"change_render('{self.name}',{min(12, self.direction+self.action)},{self.map_x},{self.map_y});")
+        self.helper.ws._push([{"id":"canvas-characters","type":"change_ch","data":{"name":self.name,"animation":min(12, self.direction+self.action)}}])
 
     def update_render(self):
         """
@@ -151,12 +149,15 @@ class Character:
         Paramètres:
             - damage: Un entier donnant le nombre de dégâts à infliger au personnage
             
+            - source: Une instance de Character à l'initiative de l'attaque
+            
         Renvoie True si le personnage est mort, False sinon
         """
         if type(damage) != int or damage < 0:
             raise ValueError("damage doit etre un entier positif")
         if not self.dead:
-            self.helper.ws.injecte(f"hit_character('{self.name}');")
+            self.helper.ws._push([{"id":"canvas-characters","type":"hit_ch","data":{"name":self.name}}])
+            #self.helper.ws.injecte(f"hit_character('{self.name}');")
             if self.name == "player":
                 for i in range(min(5, damage)):
                     self.helper.ws.add_class("heart"+str(self.health - i), "heart-hit")
@@ -207,5 +208,7 @@ class Character:
         """
         self.x += movement_vector[0]
         self.y += movement_vector[1]
+        if movement_vector != [0, 0]:
+            self.helper.ws._push([{"id":"canvas-characters","type":"move_ch","data":{"name":self.name,"x":self.x,"y":self.y}}])
         self.update_render()
         
