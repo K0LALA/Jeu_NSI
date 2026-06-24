@@ -98,6 +98,20 @@ function addAnimation(name, path, size, availableAnimations, frameCounts, durati
     animationMap.set(name, new AnimationProperties(name, path, size, availableAnimations, frameCounts, durations));
 }
 
+function mapCoordinates(x, y, size) {
+    let X = x - player.x + (window.innerWidth - player.size) / 2;
+    let Y = y - player.y + (window.innerHeight - player.size) / 2;
+    return [X, Y];
+}
+
+function drawRect(x1, y1, x2, y2) {
+    let [X1, Y1] = mapCoordinates(x1, y1, 64);
+    let [X2, Y2] = mapCoordinates(x2, y2, 64);
+    charactersCanvasContext.strokeStyle = "red";
+    charactersCanvasContext.lineWidth = 2;
+    charactersCanvasContext.strokeRect(X1, Y1, X2 - X1, Y2 - Y1);
+}
+
 class Character {
     constructor(name, animationName, x, y, size) {
         this.name = name;
@@ -172,8 +186,8 @@ class Character {
         let x = this.x;
         let y = this.y;
         if (this.name !== "player") {
-            x = x - player.x + (window.innerWidth - this.size) / 2
-            y = y - player.y + (window.innerHeight - this.size) / 2
+            x = x - player.x + (window.innerWidth - player.size) / 2
+            y = y - player.y + (window.innerHeight - player.size) / 2
         }
         else {
             x = (window.innerWidth  - this.size) / 2

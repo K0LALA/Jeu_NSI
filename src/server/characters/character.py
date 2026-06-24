@@ -211,8 +211,10 @@ class Character:
         
         Elle ne correspond donc pas au visuel du joueur
         """
-        return [self.get_position()[i%2] + self.hitbox[i] * self.scale for i in range(4)]
-    
+        b = [self.get_position()[i%2] + self.hitbox[i] * self.scale for i in range(4)]
+        #self.helper.ws.injecte(f"drawRect({b[0]},{b[1]},{b[2]},{b[3]});")
+        return b
+
     def get_center_position(self):
         """
         Renvoie la position du centre du personnage sous la forme (x, y)
