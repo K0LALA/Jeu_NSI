@@ -127,7 +127,6 @@ class Character:
         # Si le personnage est mort, on ne change pas son animation
         if self.dead:
             return
-        print(self.action)
         self.helper.ws._push([{"id":"canvas-characters","type":"change_ch","data":{"name":self.name,"animation":min(12, self.direction+self.action)}}])
 
     def update_render(self):

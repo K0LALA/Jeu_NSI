@@ -187,7 +187,7 @@ class Character {
             x = (window.innerWidth  - this.size) / 2
             y = (window.innerHeight - this.size) / 2
         }
-        this.animation.drawFrame(this.currentAnimation, this.animationFrameIndex, x, y, this.size);
+        this.animation.drawFrame(this.currentAnimation, this.animationFrameIndex, Math.round(x), Math.round(y), this.size);
         if (this.hit) {
             charactersCanvasContext.filter = "none";
         }
