@@ -40,7 +40,7 @@ class Collider:
         
     def check_for_collision(self, box: tuple[float, float, float, float]) -> bool:
         """
-        Vérifie s'il y a ou non une collision entre le collider et la boite donnee en parametres
+        Vérifie s'il y a ou non une collision entre le collider et la boîte donnée en paramètres
         
         Pour se faire, la méthode parcourt chacun des 4 coins de la boite et regarde si au moins l'un deux est dans le collider auquel cas il y a collision
         
@@ -188,16 +188,23 @@ class CollisionResolver:
         """
         
         box = (pos[0] + mov[0], pos[1] + mov[1], pos[2] + mov[0], pos[3] + mov[1])
-        validate = True
+        validate = mov
         closest_interact = None
         
         collision_candidate: Collider
         for collision_candidate in self.colliders.values():
             
             # On regarde s'il y a collision avec la map
-            if validate and collision_candidate.is_block() and collision_candidate.check_for_collision(box):
-                # Si tel est le cas, on renvoie False pour la validation du mouvement
-                validate = False
+            if validate != [0, 0] and collision_candidate.is_block() and collision_candidate.check_for_collision(box):
+                # Il y a collision, on essaie de se déplacer que sur un axe pour voir s'il y a toujours collision
+                box_x = (pos[0] + mov[0], pos[1], pos[2] + mov[0], pos[3])
+                box_y = (pos[0], pos[1] + mov[1], pos[2], pos[3] + mov[1])
+                if not collision_candidate.check_for_collision(box_x):
+                    validate[1] = 0
+                elif not collision_candidate.check_for_collision(box_y):
+                    validate[0] = 0
+                else:
+                    validate = [0, 0]
                 
             # On regarde si le joueur peut intéragir avec quoi que ce soit
             if collision_candidate.is_interactable() and collision_candidate.check_for_collision(box):

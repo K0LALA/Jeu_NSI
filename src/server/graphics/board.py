@@ -8,7 +8,6 @@ from constants import BOARD_PATH, TILESET_PATH_PLACEHOLDER, BLOCKS_SIZE, BASE_TI
 
 # La taille d'une tile classique, sans zoom
 TRANSLATE_AMOUNT = 16
-#enemies_board = []
 npc_board = []
 
 class Board:
@@ -45,12 +44,17 @@ class Board:
         self.link = sqlite3.connect(BOARD_PATH, check_same_thread=False)
         self.base = self.link.cursor()
         
+        self.base.execute("SELECT character_z FROM worlds WHERE name=?;", (self.world,))
+        result = self.base.fetchall()
+        if len(result) != 1:
+            self.link.close()
+            raise ValueError("Il y a une erreur dans la base de données: Le monde n'existe pas ou est present plusieurs fois")
+        self.helper.ws.attributs("canvas-characters", style={"z-index":f"{result[0]}"})
+        
         # Coordonnees du centre en pixels
         self.base.execute("SELECT origin_x,origin_y FROM worlds WHERE name=?;", (self.world,))
         origin = self.base.fetchall()
         if len(origin) != 1:
-            # Pour rajouter les colonnes:
-            # `ALTER TABLE worlds ADD COLUMN {origin_x/origin_y} INTEGER;`
             self.link.close()
             raise ValueError("Il y a une erreur dans la base de données: Le monde n'a pas d'origine")
         self.origin = origin[0]
@@ -150,7 +154,7 @@ class Board:
             else:
                 self.etat_champs[(int(cle.split("_")[1]), int(cle.split("_")[2]))] = False
         
-        self.base.execute("SELECT enemy_id,x,y FROM enemies WHERE block_id=?;", (block_id,))
+        self.base.execute("SELECT enemy_id,x,y,enemy_type FROM enemies WHERE block_id=?;", (block_id,))
         for elt in self.base.fetchall():
             self.enemies_board.append(elt)
 
@@ -279,7 +283,7 @@ class Board:
             if self.collisions[layer]:
                 # Il n'est pas nécessaire de vérifier si self.collisions est à None car c'est le cas seulement si board est EditorBoard, auquel cas load_all est surchargé
                 self.layer_bounds[layer] = self.add_collider_layer(layer)
-                continue
+                #continue
             self.layer_bounds[layer] = self.add_layer(layer)
 
     def remove_block(self, layer: int, block_x: int, block_y: int, collider: bool) -> None:

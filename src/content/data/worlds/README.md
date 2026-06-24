@@ -8,7 +8,8 @@ Une première table `worlds` stocke les différents mondes:
 CREATE TABLE worlds (
     name VARCHAR PRIMARY KEY,
     origin_x INTEGER, -- Les coordonées de la tile qui
-    origin_y INTEGER, -- doit être chargée au centre 
+    origin_y INTEGER, -- doit être chargée au centre
+    character_z INTEGER
 );
 ```
 

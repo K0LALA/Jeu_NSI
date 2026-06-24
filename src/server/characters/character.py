@@ -1,6 +1,6 @@
 import sqlite3
 import web_helper
-from constants import CHARACTERS_PATH, ZOOM
+from constants import CHARACTERS_PATH
 
 from .weapon import Weapon
 
@@ -17,6 +17,21 @@ ATTACK      = 8
 DIE         = 12
 
 class Character:
+    def init_spritesheets(ws):
+        """
+        Cette fonction envoie au JS toutes les informations sur les spritesheets depuis la BD
+        """
+        link = sqlite3.connect(CHARACTERS_PATH)
+        base = link.cursor()
+        
+        # name, path, size, animation_map, frame_counts, durations
+        base.execute("SELECT * FROM spritesheet;")
+        
+        spritesheets = base.fetchall()
+        for spritesheet in spritesheets:
+            name,path,size,animation_map,frame_counts,durations = spritesheet
+            ws.injecte(f"addAnimation('{name}','{path}',{size},{animation_map},{frame_counts},{durations});")
+    
     def __init__(self, player, helper: web_helper.Helper, name: str, position: tuple[int, int]):
         """
         Initialise un personnage, cette classe est abstraite, elle n'est pas censée être utilisée directement pour créer un personnage
@@ -51,7 +66,7 @@ class Character:
 
         self.fetch_attributes()
         
-        self.initialize(self.animation)
+        self.initialize()
     
     def fetch_attributes(self):
         link = sqlite3.connect(CHARACTERS_PATH)
@@ -64,7 +79,7 @@ class Character:
             raise ValueError("Le personnage n'est pas unique ou n'existe pas dans la base de données")
         
         
-        # name, w, h, hx1, hy1, hx2, hy2, tileset, health, weapon, speed
+        # name, w, h, hx1, hy1, hx2, hy2, spritesheet, health, weapon, speed
         attributes = attributes_list[0]
         if len(attributes) != 11:
             raise ValueError("Le nombre d'attributs n'est pas le bon, 11 sont attendus.")
@@ -74,7 +89,15 @@ class Character:
         self.size = attributes[1]
         self.hitbox = (attributes[3], attributes[4], attributes[5], attributes[6])
         
-        self.animation = attributes[7]
+        self.spritesheet = attributes[7]
+        
+        base.execute("SELECT size FROM spritesheet WHERE name=?;", (self.spritesheet,))
+        
+        results = base.fetchall()
+        if len(results) != 1:
+            raise ValueError("La base de donnees ne contient pas la spritesheet ou plusieurs portent le meme nom.")
+        
+        self.scale = self.size / results[0][0]
         
         self.health = self.MAX_HEALTH = attributes[8]
         
@@ -91,8 +114,8 @@ class Character:
         
         link.close()
     
-    def initialize(self, animation):
-        self.helper.ws._push([{"id":"canvas-characters","type":"add_ch","data":{"name":self.name,"animation":animation,"x":self.x,"y":self.y,"size":self.size}}])
+    def initialize(self):
+        self.helper.ws._push([{"id":"canvas-characters","type":"add_ch","data":{"name":self.name,"animation":self.spritesheet,"x":self.x,"y":self.y,"size":self.size}}])
     
     def remove(self):
         self.helper.ws._push([{"id":"canvas-characters","type":"remove_ch","data":{"name":self.name}}])
@@ -188,7 +211,7 @@ class Character:
         
         Elle ne correspond donc pas au visuel du joueur
         """
-        return [self.get_position()[i%2] + self.hitbox[i] * ZOOM for i in range(4)]
+        return [self.get_position()[i%2] + self.hitbox[i] * self.scale for i in range(4)]
     
     def get_center_position(self):
         """

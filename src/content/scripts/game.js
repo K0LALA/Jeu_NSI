@@ -70,7 +70,6 @@ class AnimationProperties {
     }
 }
 
-// TODO: Utiliser la base de données
 animationMap.set("player", new AnimationProperties("player", "../assets/spritesheets/player.png", 32,
     [0, 1, 2, 3, 4, 5, 6, 7, 8,9 , 10, 11, 12],
     [6, 6, 6, 6, 6, 6, 6, 6, 4, 4, 4, 4, 4],
@@ -92,9 +91,13 @@ animationMap.set("slime", new AnimationProperties("slime", "../assets/spriteshee
     [0, 0, 0, 0, 1, 1, 1, 1, 1, 1, 1, 1, 2],
     [4, 8, 8],
     [[250, 200, 225, 250],
-    [150, 150, 175, 75, 100, 100, 100, 150],
+    [150, 150, 175, 75, 100, 100, 100, 100],
     [100, 50, 50, 50, 50, 50, 100, 100]]));
-    
+
+function addAnimation(name, path, size, availableAnimations, frameCounts, durations) {
+    animationMap.set(name, new AnimationProperties(name, path, size, availableAnimations, frameCounts, durations));
+}
+
 class Character {
     constructor(name, animationName, x, y, size) {
         this.name = name;
@@ -193,7 +196,7 @@ function add_character(name, animation, x, y, size) {
 
     // On ajoute le personnage a la liste triée des personnages
     characterSortedList.push(character);
-    characterSortedList.sort((a,b) => b.y - a.y);
+    characterSortedList.sort((a,b) => a.y - b.y);
 }
 
 function remove_character(name) {
@@ -225,9 +228,9 @@ function hit_character(name) {
 }
 
 function updateRender(timestamp) {
-    if (!animationMap.values().next().value.spritesheet.complete) {
+    /*if (animationMap.size == 0 || !animationMap.values().next().value.spritesheet.complete) {
         requestAnimationFrame(updateRender);
-    }
+    }*/
 
     charactersCanvasContext.clearRect(0, 0, charactersCanvas.width, charactersCanvas.height);
 

@@ -15,9 +15,11 @@ CREATE TABLE character(
     hy1 INTEGER,    /* On ne considère pas le zoom ici  */
     hx2 INTEGER,
     hy2 INTEGER,
-    tileset VARCHAR,
+    spritesheet VARCHAR,
     health INTEGER,
     weapon INTEGER,
+    speed INTEGER,
+    FOREIGN KEY (spritesheet) REFERENCES spritesheet(name),
     FOREIGN KEY (weapon) REFERENCES weapon(weapon_id)
 );
 ```
@@ -31,5 +33,21 @@ CREATE TABLE weapon(
     weapon_id INTEGER PRIMARY KEY AUTOINCREMENT,
     damage INTEGER,
     range INTEGER,
-    cooldown FLOAT);
+    cooldown FLOAT
+);
+```
+
+### `spritesheet`
+
+Cette table représente une spritesheet
+
+```SQL
+CREATE TABLE spritesheet(
+    name VARCHAR(25) PRIMARY KEY,
+    path TEXT,
+    size INTEGER,
+    animation_map TEXT, /* Ces trois dernières valeurs sont des */
+    frame_counts TEXT,  /* listes sous la forme de texte pour   */
+    durations TEXT      /* être utilisées en JS                 */
+);
 ```

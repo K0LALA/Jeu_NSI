@@ -11,7 +11,7 @@ import collision_resolver
 import graphics.board
 from characters.character import Character
 from characters.player import Player
-from characters.enemy import Enemy, Enemy_OLD
+from characters.enemy import Enemy
 from characters.npc import Interactable, Npc
 from inputs.keyboard import Keyboard
 from inputs.mouse import Mouse
@@ -63,16 +63,10 @@ class Game:
         self.collision_resolver = collision_resolver.CollisionResolver()
         self.board = graphics.board.Board(self.web_helper, "spawn", self.collision_resolver)
         
-        #self.splayer = Character(self.web_helper, "player", (600, 350), "player")
-        
-        # Pour l'instant, le joueur doit rester en premier, car il a du style sur #img0
-        # Les coordonnées qui lui sont passées sont celles
-        self.web_manager.attributs("canvas-characters", style={"z-index": "7"})
+        Character.init_spritesheets(self.web_manager)
         
         self.player = None
-        self.init_player(self.board.origin, 7)
-
-        #self.slime = Character(self.player, self.web_helper, "slime", (0, 0))
+        self.init_player(self.board.origin)
 
         self.zoom = self.board.zoom
         self.npc: list[Npc] = []
@@ -83,16 +77,13 @@ class Game:
             current_npc = Npc(self.web_helper, position, "assets/spritesheets/blue_haired_woman/"+str(npc[3]), dialogs=str(npc[4]))
             self.collision_resolver.add_collider(position_collider, collision_resolver.INTERACTABLE, current_npc)
             self.npc.append(current_npc)
-
         
         self.enemies: list[Enemy] = []
 
-        """for enemy in self.board.enemies_board:
+        for enemy in self.board.enemies_board:
             position = (enemy[1]*constants.BASE_TILE_SIZE*self.zoom, enemy[2]*constants.BASE_TILE_SIZE*self.zoom)
-            current_enemy = Enemy_OLD(self.web_helper, position, "assets/spritesheets/blonde_man/blonde_man_010.png", 3)
-            self.enemies.append(current_enemy)"""
-            
-        self.enemies.append(Enemy(self.player, self.web_helper, "slime", (-340, -340)))
+            current_enemy = Enemy(self.player, self.web_helper, enemy[3], position)
+            self.enemies.append(current_enemy)
 
         self.interactable: Interactable = None
 
@@ -111,10 +102,9 @@ class Game:
         self.inventaire = {}
         self.place_inventaire = {}
 
-    def init_player(self, position: tuple[int, int], zindex: int):
+    def init_player(self, position: tuple[int, int]):
         del self.player
         self.player = Player(self.web_helper, position)
-        #self.web_manager.attributs(self.player.id, style={"z-index": zindex})
 
     def interact_key_handler(self, key):
         if self.interactable == None or not issubclass(type(self.interactable), Interactable):
@@ -154,14 +144,13 @@ class Game:
             
             if window_size != None:
                 self.board.window_size_changed()
-                self.player.update_graphics(window_size)
 
             keys = self.keyboard_manager.get_keys()
             
             if 'KeyP' in keys and self.player.is_dead():
                 self.web_manager.remove_children("player")
                 self.player.remove()
-                self.init_player(self.board.origin, 7)
+                self.init_player(self.board.origin)
                 self.board.reset_view()
 
             if "KeyI" in keys and time.time() - self.last_menu_time >= self.menu_cooldown:
@@ -252,8 +241,7 @@ class Game:
                     enemy_movement = enemy.update(delta_time, self.player)
                     if enemy_movement != [0, 0]:
                         move_validate,_ = self.collision_resolver.attempt_movement(enemy.get_boundaries(), enemy_movement)
-                        if move_validate:
-                            enemy.validate_position(enemy_movement)
+                        enemy.validate_position(move_validate)
                     else:
                         enemy.validate_position(enemy_movement)
                     dst = sqrt((enemy.x - self.player.x) ** 2 + (enemy.y - self.player.y) ** 2)
@@ -263,8 +251,8 @@ class Game:
                     player_movement = self.player.update(delta_time, keys, in_range_enemies)
                     if player_movement != [0, 0]:
                         move_validate, new_interactable = self.collision_resolver.attempt_movement(self.player.get_boundaries(), player_movement)
-                        if move_validate:
-                            self.player.validate_position(player_movement)
+                        self.player.validate_position(move_validate)
+                        if move_validate != [0, 0]:
                             # Actualiser les blocs rendus sur la carte et scroller si nécessaire
                             self.board.translate(web_helper.multiply_list(player_movement, -1))
                     else:
