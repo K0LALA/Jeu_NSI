@@ -164,7 +164,6 @@ class Game:
             # On actualise la liste des ennemis en supprimant ceux qui sont morts
             for enemy in self.enemies:
                 if enemy.is_dead():
-                    enemy.remove()
                     self.enemies.remove(enemy)
 
             # Toutes les instructions ici sont mises en pauses lorsqu'un menu est ouvert par le joueur

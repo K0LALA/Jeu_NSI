@@ -98,20 +98,6 @@ function addAnimation(name, path, size, availableAnimations, frameCounts, durati
     animationMap.set(name, new AnimationProperties(name, path, size, availableAnimations, frameCounts, durations));
 }
 
-function mapCoordinates(x, y, size) {
-    let X = x - player.x + (window.innerWidth - player.size) / 2;
-    let Y = y - player.y + (window.innerHeight - player.size) / 2;
-    return [X, Y];
-}
-
-function drawRect(x1, y1, x2, y2) {
-    let [X1, Y1] = mapCoordinates(x1, y1, 64);
-    let [X2, Y2] = mapCoordinates(x2, y2, 64);
-    charactersCanvasContext.strokeStyle = "red";
-    charactersCanvasContext.lineWidth = 2;
-    charactersCanvasContext.strokeRect(X1, Y1, X2 - X1, Y2 - Y1);
-}
-
 class Character {
     constructor(name, animationName, x, y, size) {
         this.name = name;
@@ -139,7 +125,10 @@ class Character {
      * @param {number} animationIndex Indice de la nouvelle animation
      */
     changeAnimation(animationIndex) {
-        if (8 <= this.currentAnimation && this.currentAnimation < 12 && this.animationFrameIndex + 1 < this.animationFrameCount) {
+        if (this.currentAnimation == 12) {
+            return;
+        }
+        if (animationIndex != 12 && 8 <= this.currentAnimation && this.currentAnimation < 12 && this.animationFrameIndex + 1 < this.animationFrameCount) {
             // Si l'animation voulue n'est pas une attaque, elle viendre après l'attaque
             if (animationIndex < 8) {
                 this.lastAnimation = animationIndex;
@@ -173,7 +162,12 @@ class Character {
                 this.changeAnimation(this.lastAnimation);
             }
             // On ne veut pas passer à la prochaine frame si l'animation de mort est finie.
-            if (!(this.currentAnimation == 12 && this.animationFrameIndex + 1 == this.animationFrameCount)) {
+            if (this.currentAnimation == 12 && this.animationFrameIndex + 1 == this.animationFrameCount) {
+                if (this.name !== "player") {
+                    remove_character(this.name);
+                }
+            }
+            else {
                 this.animationFrameIndex += 1;
                 this.animationFrameIndex %= this.animationFrameCount;
             }
@@ -220,8 +214,8 @@ function remove_character(name) {
 
 function change_render(characterName, animation) {
     let character = characterMap.get(characterName);
-
-    if (character.animationIndex != animation) {
+    
+    if (character.currentAnimation != animation) {
         character.changeAnimation(animation);
     }
 }

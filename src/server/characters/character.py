@@ -127,6 +127,7 @@ class Character:
         # Si le personnage est mort, on ne change pas son animation
         if self.dead:
             return
+        print(self.action)
         self.helper.ws._push([{"id":"canvas-characters","type":"change_ch","data":{"name":self.name,"animation":min(12, self.direction+self.action)}}])
 
     def update_render(self):
@@ -212,7 +213,6 @@ class Character:
         Elle ne correspond donc pas au visuel du joueur
         """
         b = [self.get_position()[i%2] + self.hitbox[i] * self.scale for i in range(4)]
-        #self.helper.ws.injecte(f"drawRect({b[0]},{b[1]},{b[2]},{b[3]});")
         return b
 
     def get_center_position(self):
