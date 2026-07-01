@@ -280,10 +280,10 @@ class Board:
         self.calculate_shift(w,h)
         self.helper.ws.attributs("tiles", style={"left": str(self.shift[0]) + "px", "top": str(self.shift[1]) + "px"})
         for layer in self.layers.keys():
+            # Il n'est pas nécessaire de vérifier si self.collisions est à None car c'est le cas seulement si board est EditorBoard, auquel cas load_all est surchargé
             if self.collisions[layer]:
-                # Il n'est pas nécessaire de vérifier si self.collisions est à None car c'est le cas seulement si board est EditorBoard, auquel cas load_all est surchargé
                 self.layer_bounds[layer] = self.add_collider_layer(layer)
-                #continue
+                continue
             self.layer_bounds[layer] = self.add_layer(layer)
 
     def remove_block(self, layer: int, block_x: int, block_y: int, collider: bool) -> None:
