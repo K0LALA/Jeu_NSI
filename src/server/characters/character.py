@@ -17,20 +17,37 @@ ATTACK      = 8
 DIE         = 12
 
 class Character:
+    # Une liste des animations disponibles (valeur) pour chaque spritesheet (clé)
+    AVAILABLE_ANIMATIONS: dict[str, dict[str, None]] = dict()
+    
     def init_spritesheets(ws):
         """
         Cette fonction envoie au JS toutes les informations sur les spritesheets depuis la BD
+        
+        Elle charge également Character.AVAILABLE_ANIMATIONS, qui pour chaque spritesheet, donne une liste des animations possibles
+        
+        Les animations sont pour la plupart de la forme `NOM_ANIMATION;DIRECTION` mais certaine comme `die` ne le sont pas
         """
         link = sqlite3.connect(CHARACTERS_PATH)
         base = link.cursor()
         
-        # name, path, size, animation_map, frame_counts, durations
+        # name, path, size
         base.execute("SELECT * FROM spritesheet;")
         
         spritesheets = base.fetchall()
         for spritesheet in spritesheets:
-            name,path,size,animation_map,frame_counts,durations = spritesheet
-            ws.injecte(f"addAnimation('{name}','{path}',{size},{animation_map},{frame_counts},{durations});")
+            name,path,size = spritesheet
+            Character.AVAILABLE_ANIMATIONS[name] = dict()
+            animation_map: dict[str, int] = dict()
+            base.execute("SELECT * FROM animations WHERE spritesheet_id=?;", (name,))
+            animations = base.fetchall()
+            animation: list[str]
+            for animation in animations:
+                animation_name,_,position,repeat,count,durations = animation
+                Character.AVAILABLE_ANIMATIONS[name][animation_name] = None
+                durations_list = list(map(int, durations.split(',')))
+                animation_map[animation_name] = [position,repeat,count,durations_list]
+            ws.injecte(f"addAnimation('{name}','{path}',{size},{animation_map});")
     
     def __init__(self, player, helper: web_helper.Helper, name: str, position: tuple[int, int]):
         """
@@ -59,8 +76,8 @@ class Character:
         self.x, self.y = position
         
         self.movement_vector = [0, 0]
-        self.direction = FRONT
-        self.action = IDLE
+        self.action = "idle"
+        self.direction = ""
         
         self.dead = False
 
@@ -115,11 +132,34 @@ class Character:
         link.close()
     
     def initialize(self):
-        self.helper.ws._push([{"id":"canvas-characters","type":"add_ch","data":{"name":self.name,"animation":self.spritesheet,"x":self.x,"y":self.y,"size":self.size}}])
+        self.helper.ws._push([{"id":"canvas-characters","type":"add_ch","data":{"name":self.name,"animation":self.spritesheet,"start_anim":self.action+';'+self.direction,"x":self.x,"y":self.y,"size":self.size}}])
     
     def remove(self):
         self.helper.ws._push([{"id":"canvas-characters","type":"remove_ch","data":{"name":self.name}}])
     
+    def has_animation(self, animation):
+        return animation in Character.AVAILABLE_ANIMATIONS[self.spritesheet]
+    
+    def change_animation_if_exists(self, new_action, new_direction=None):
+        """
+        Change l'animation en cours pour celle en paramètre
+        
+        Si la nouvelle animation est la même que l'ancienne, aucun changement n'est fait
+        """       
+        if new_direction == None:
+            new_direction = self.direction
+         
+        if new_action == self.action and new_direction == self.direction:
+            return
+        
+        new_animation = new_action + ";"
+        new_animation += new_direction
+            
+        if self.has_animation(new_animation):
+            self.action = new_action
+            self.direction = new_direction
+            self.render()
+        
     def render(self):
         """
         Change l'animation côté client
@@ -127,7 +167,7 @@ class Character:
         # Si le personnage est mort, on ne change pas son animation
         if self.dead:
             return
-        self.helper.ws._push([{"id":"canvas-characters","type":"change_ch","data":{"name":self.name,"animation":min(12, self.direction+self.action)}}])
+        self.helper.ws._push([{"id":"canvas-characters","type":"change_ch","data":{"name":self.name,"animation":(self.action+";"+self.direction)}}])
 
     def update_render(self):
         """
@@ -136,24 +176,21 @@ class Character:
         new_action = self.action
         new_direction = self.direction
         if self.movement_vector == [0, 0]:
-            new_action = IDLE
+            new_action = "idle"
         elif abs(self.movement_vector[0]) > abs(self.movement_vector[1]):
-            new_action = WALK
+            new_action = "walk"
             if self.movement_vector[0] >= 0:
-                new_direction = RIGHT
+                new_direction = "right"
             else:
-                new_direction = LEFT
+                new_direction = "left"
         else:
-            new_action = WALK
+            new_action = "walk"
             if self.movement_vector[1] >= 0 :
-                new_direction = FRONT
+                new_direction = "front"
             else:
-                new_direction = BACK
+                new_direction = "back"
         
-        if new_action != self.action or new_direction != self.direction:
-            self.action = new_action
-            self.direction = new_direction
-            self.render()
+        self.change_animation_if_exists(new_action, new_direction)
             
     def attack(self, targets):
         """
@@ -161,8 +198,7 @@ class Character:
         
         L'attaque est gérée par Weapon, qui gère notamment le cooldown
         """
-        self.action = ATTACK
-        self.render()
+        self.change_animation_if_exists("attack")
         self.weapon.attack(targets)
         
     def hit(self, damage: int, source = None):
@@ -180,15 +216,15 @@ class Character:
             raise ValueError("damage doit etre un entier positif")
         if not self.dead:
             self.helper.ws._push([{"id":"canvas-characters","type":"hit_ch","data":{"name":self.name}}])
-            #self.helper.ws.injecte(f"hit_character('{self.name}');")
             if self.name == "player":
                 for i in range(min(5, damage)):
                     self.helper.ws.add_class("heart"+str(self.health - i), "heart-hit")
             self.health = max(0, self.health - damage)
             if self.health == 0:
-                self.action = DIE
-                self.render()
+                self.change_animation_if_exists("die", "")
                 self.dead = True
+            else:
+                self.change_animation_if_exists("hurt")
         return self.dead
     
     def is_dead(self):

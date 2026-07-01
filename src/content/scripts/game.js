@@ -14,6 +14,11 @@ charactersCanvas.width = window.innerWidth;
 charactersCanvas.height = window.innerHeight;
 let charactersCanvasContext = charactersCanvas.getContext("2d");
 charactersCanvasContext.imageSmoothingEnabled = false;
+window.addEventListener("resize", (_) => {
+    charactersCanvas.width = window.innerWidth;
+    charactersCanvas.height = window.innerHeight;
+    charactersCanvasContext.imageSmoothingEnabled = false;
+});
 let animationMap = new Map();
 let characterMap = new Map();
 // Liste des personnages triées par rapport à leur position en Y, de la plus grande à la plus petite (BACK: +Y, FRONT: -Y)
@@ -36,7 +41,7 @@ const ATTACK = 8;
 const DIE = 12;
 
 class AnimationProperties {
-    constructor(name, spritesheetPath, size, availableAnimations, frames, durations) {
+    constructor(name, spritesheetPath, size, animationMapping) {
         this.name = name;
 
         this.spritesheetPath = spritesheetPath;
@@ -44,33 +49,46 @@ class AnimationProperties {
         this.spritesheet.src = spritesheetPath;
         this.size = size;
 
-        this.availableAnimations = availableAnimations;
-        // Liste, donne le nombre de frames pour chaque animation
-        this.frames = frames;
-        // Liste de listes, donne la durée de chaque frame pour chaque animation
-        this.durations = durations
+        // Object{animationName -> Array[position: number, repeat: boolean, frameCount: Array, durations: Array]}
+        this.animationMapping = animationMapping;
     }
 
-    getFrames(animationIndex) {
-        return this.frames[this.availableAnimations[animationIndex]];
+    testIfAnimationExists(animation) {
+        if (!this.animationMapping.hasOwnProperty(animation)) {
+            console.error("AnimationMapping has not such property:", this.name, animation);
+            return false;
+        }
+        return true;
     }
 
-    getDurations(animationIndex) {
-        return this.durations[this.availableAnimations[animationIndex]];
+    isRepeating(animation) {
+        if (!this.testIfAnimationExists(animation)) return null;
+        return this.animationMapping[animation].at(1);
     }
 
-    drawFrame(animationIndex, frame, x, y, dstSize) {
+    getFrames(animation) {
+        if (!this.testIfAnimationExists(animation)) return null;
+        return this.animationMapping[animation].at(2);
+    }
+
+    getDurations(animation) {
+        if (!this.testIfAnimationExists(animation)) return null;
+        return this.animationMapping[animation].at(3);
+    }
+
+    drawFrame(animation, frame, x, y, dstSize) {
+        if (!this.testIfAnimationExists(animation)) return null;
         while (!this.spritesheet.complete) {
             ;
         }
         charactersCanvasContext.drawImage(this.spritesheet,
-            frame * this.size, this.availableAnimations[animationIndex] * this.size, this.size, this.size,
+            frame * this.size, this.animationMapping[animation].at(0) * this.size, this.size, this.size,
             x, y, dstSize, dstSize
         )
     }
 }
 
-animationMap.set("player", new AnimationProperties("player", "../assets/spritesheets/player.png", 32,
+/*animationMap.set("player", new AnimationProperties("player", "../assets/spritesheets/player.png", 32,
     [0, 1, 2, 3, 4, 5, 6, 7, 8,9 , 10, 11, 12],
     [6, 6, 6, 6, 6, 6, 6, 6, 4, 4, 4, 4, 4],
     [   [125, 125, 125, 125, 125, 125],
@@ -92,22 +110,26 @@ animationMap.set("slime", new AnimationProperties("slime", "../assets/spriteshee
     [4, 8, 8],
     [[250, 200, 225, 250],
     [150, 150, 175, 75, 100, 100, 100, 100],
-    [100, 50, 50, 50, 50, 50, 100, 100]]));
+    [100, 50, 50, 50, 50, 50, 100, 100]]));*/
 
-function addAnimation(name, path, size, availableAnimations, frameCounts, durations) {
-    animationMap.set(name, new AnimationProperties(name, path, size, availableAnimations, frameCounts, durations));
+function addAnimation(name, path, size, animationMapping) {
+    animationMap.set(name, new AnimationProperties(name, path, size, animationMapping));
 }
 
 class Character {
-    constructor(name, animationName, x, y, size) {
+    constructor(name, animationName, startingAnimation, x, y, size) {
         this.name = name;
 
-        this.animation = animationMap.get(animationName);
-        this.lastAnimation = 0; // Utilisé que lors d'une attaque pour savoir vers quelle animation retourner après
-        this.currentAnimation = 0;
+        this.ANIMATION = animationMap.get(animationName);
+        
+        this.currentAnimation = startingAnimation;
+        this.animationPrefix = this.currentAnimation.slice(0, this.currentAnimation.indexOf(';'));
+        this.nextAnimation = ""; // Utilisé lorsqu'une animation ne peut pas etre interrompue pour savoir laquelle vient après
+
         this.animationFrameIndex = 0;
-        this.animationFrameCount = this.animation.getFrames(this.currentAnimation);
-        this.animationDurations = this.animation.getDurations(this.currentAnimation);
+        this.doRepeat = this.ANIMATION.isRepeating(this.currentAnimation);
+        this.animationFrameCount = this.ANIMATION.getFrames(this.currentAnimation);
+        this.animationDurations = this.ANIMATION.getDurations(this.currentAnimation);
 
         this.x = x;
         this.y = y;
@@ -121,25 +143,30 @@ class Character {
     }
 
     /**
-     * Change l'indice de l'animation en cours
-     * @param {number} animationIndex Indice de la nouvelle animation
+     * Change l'animation en cours
+     * @param {string} newAnimation Nouvelle animation
      */
-    changeAnimation(animationIndex) {
-        if (this.currentAnimation == 12) {
+    changeAnimation(newAnimation) {
+        if (this.currentAnimation === "die;") {
             return;
         }
-        if (animationIndex != 12 && 8 <= this.currentAnimation && this.currentAnimation < 12 && this.animationFrameIndex + 1 < this.animationFrameCount) {
-            // Si l'animation voulue n'est pas une attaque, elle viendre après l'attaque
-            if (animationIndex < 8) {
-                this.lastAnimation = animationIndex;
+        // Si l'animation ne se répète pas, elle ne peut pas être interrompue (c.f. characters/README.md)
+        // Si l'action est la même on change de direction, sinon on attend que l'animation actuelle soit finie
+        if (!this.doRepeat && this.animationFrameIndex + 1 < this.animationFrameCount) {
+            // On change seulement la direction de l'animation
+            if (newAnimation.startsWith(this.animationPrefix)) {
+                this.currentAnimation = newAnimation;
             }
-            // On change seulement la direction de l'attaque
-            this.currentAnimation = 8 + animationIndex % 4;
+            else {
+                this.nextAnimation = newAnimation;
+            }
             return;
         }
-        this.currentAnimation = animationIndex;
-        this.animationFrameCount = this.animation.getFrames(this.currentAnimation);
-        this.animationDurations = this.animation.getDurations(this.currentAnimation);
+        this.animationPrefix = newAnimation.slice(0, newAnimation.indexOf(';'));
+        this.currentAnimation = newAnimation;
+        this.doRepeat = this.ANIMATION.isRepeating(this.currentAnimation);
+        this.animationFrameCount = this.ANIMATION.getFrames(this.currentAnimation);
+        this.animationDurations = this.ANIMATION.getDurations(this.currentAnimation);
         this.animationFrameIndex = 0;
         this.frameLasted = 0;
     }
@@ -157,12 +184,12 @@ class Character {
         let newFrameLasted = this.frameLasted + dT;
         if (newFrameLasted > this.animationDurations[this.animationFrameIndex]) {
             newFrameLasted = 0;
-            // Lorsque l'attaque est finie, on revient à l'animation précédente
-            if (8 <= this.currentAnimation && this.currentAnimation < 12 && this.animationFrameIndex + 1 == this.animationFrameCount) {
-                this.changeAnimation(this.lastAnimation);
+            // Si l'attaque ne se répète pas, on revient à la précédente lorsqu'elle est finie
+            if (!this.doRepeat && this.animationFrameIndex + 1 == this.animationFrameCount) {
+                this.changeAnimation(this.nextAnimation);
             }
             // On ne veut pas passer à la prochaine frame si l'animation de mort est finie.
-            if (this.currentAnimation == 12 && this.animationFrameIndex + 1 == this.animationFrameCount) {
+            if (this.currentAnimation === "die;" && this.animationFrameIndex + 1 == this.animationFrameCount) {
                 if (this.name !== "player") {
                     remove_character(this.name);
                 }
@@ -187,16 +214,16 @@ class Character {
             x = (window.innerWidth  - this.size) / 2
             y = (window.innerHeight - this.size) / 2
         }
-        this.animation.drawFrame(this.currentAnimation, this.animationFrameIndex, Math.round(x), Math.round(y), this.size);
+        this.ANIMATION.drawFrame(this.currentAnimation, this.animationFrameIndex, Math.round(x), Math.round(y), this.size);
         if (this.hit) {
             charactersCanvasContext.filter = "none";
         }
     }
 }
 
-function add_character(name, animation, x, y, size) {
+function add_character(name, animation, startAnimation, x, y, size) {
     remove_character(name);
-    let character = new Character(name, animation, x, y, size);
+    let character = new Character(name, animation, startAnimation, x, y, size);
     if (name === "player") {
         player = character;
     }
@@ -236,10 +263,6 @@ function hit_character(name) {
 }
 
 function updateRender(timestamp) {
-    /*if (animationMap.size == 0 || !animationMap.values().next().value.spritesheet.complete) {
-        requestAnimationFrame(updateRender);
-    }*/
-
     charactersCanvasContext.clearRect(0, 0, charactersCanvas.width, charactersCanvas.height);
 
     deltaTime = timestamp - lastUpdate;

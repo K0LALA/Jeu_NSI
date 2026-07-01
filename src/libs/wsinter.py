@@ -196,7 +196,7 @@ function faire(o){
         }
         else if (type == "add_ch")
         {
-            add_character(data["name"], data["animation"], data["x"], data["y"], data["size"]);
+            add_character(data["name"], data["animation"], data["start_anim"], data["x"], data["y"], data["size"]);
         }
         else if (type == "remove_ch")
         {

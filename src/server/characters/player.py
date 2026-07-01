@@ -17,8 +17,8 @@ class Player(Character):
         self.x = map_center[0] * BASE_TILE_SIZE * ZOOM - self.size / 2
         self.y = map_center[1] * BASE_TILE_SIZE * ZOOM - self.size / 2
         
-        self.direction = FRONT
-        self.action = IDLE
+        self.action = "idle"
+        self.direction = "front"
         self.movement_vector = [0,0]
         self.friction_coef = 0.8
         
