@@ -49,7 +49,7 @@ CREATE TABLE spritesheet(
 );
 ```
 
-### `animation`
+### `animations`
 
 Cette table représente une animation pour une spritesheet.<br>
 Pour le moment, si l'attribut `repeat` est à False, on considère qu'aucune autre animation ne peut interrompre celle actuelle.
