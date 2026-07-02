@@ -1,108 +1,112 @@
 <!DOCTYPE html>
 <html lang="fr">
-    <head>
-        <link rel="stylesheet" href="../styles/menu-style.css" id="linkmenu">
-        <link rel="stylesheet" href="../styles/style.css" id="game" disabled>
-        <link rel="stylesheet" href="../styles/credits-style.css" id="credits" disabled>
-        <link rel="preconnect" href="https://fonts.googleapis.com">
-<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Alumni+Sans+Pinstripe:ital@0;1&family=Pixelify+Sans:wght@400..700&display=swap" rel="stylesheet">
-        <meta charset="UTF-8">
-        <meta name="viewport" content="width=device-width, initial-scale=1.0">
-        <title>POOcalypse</title>
-    </head>
-    <body ondragstart="return false;" ondrop="return false;">
-        <audio autoplay loop muted id="music">
-            <source src="../assets/music/musique-menu(1).mp3" type="audio/mpeg">
-        </audio>
-        <div id="player">
-        </div>
-        <div id="quete_champs">Appuyez sur C pour récolter</div>
-        <p id="action-bar"></p>
 
-        <div id="dialogs">
-            <p id="dialog-content"></p>
+<head>
+    <link rel="stylesheet" href="../styles/menu-style.css" id="linkmenu">
+    <link rel="stylesheet" href="../styles/style.css" id="game" disabled>
+    <link rel="stylesheet" href="../styles/credits-style.css" id="credits" disabled>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link
+        href="https://fonts.googleapis.com/css2?family=Alumni+Sans+Pinstripe:ital@0;1&family=Pixelify+Sans:wght@400..700&display=swap"
+        rel="stylesheet">
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>POOcalypse</title>
+</head>
 
-            <ul id="choices"></ul>
+<body ondragstart="return false;" ondrop="return false;">
+    <audio autoplay loop muted id="music">
+        <source src="../assets/music/musique-menu(1).mp3" type="audio/mpeg">
+    </audio>
+    <div id="player">
+    </div>
+    <div id="quete_champs">Appuyez sur C pour récolter</div>
+    <p id="action-bar"></p>
+
+    <div id="dialogs">
+        <p id="dialog-content"></p>
+
+        <ul id="choices"></ul>
+    </div>
+    <div id="board" hidden>
+        <div id="tiles"></div>
+    </div>
+    <div class="background">
+        <div class="content">
+            <div>
+                <button onclick="start_game();"><b>START</b></button>
+                <button><b>SETTINGS</b></button>
+                <button onclick="start_credits();"><b>CREDITS</b></button>
+            </div>
         </div>
-        <div id="board" hidden>
-            <div id="tiles"></div>
-        </div>
-        <div class="background">
-            <div class="content">
-                <div>
-                    <button onclick="start_game();"><b>START</b></button>
-                    <button><b>SETTINGS</b></button>
-                    <button onclick="start_credits();"><b>CREDITS</b></button>
+    </div>
+    <div class="credits">
+        <p>
+            Assets d'interieur :<br>Kenny
+        </p>
+        <p>
+            Assets d'exterieur :<br>Penzilla
+        </p>
+        <p>
+            Musique :<br>Walen
+        </p>
+        <button onclick="start_menu();">Menu</button>
+    </div>
+    <div id="menu">
+        <div id="div1">
+            <div id="div5">
+                <div id="case-menu div0">
+                </div>
+            </div>
+            <div id="div6">
+                <div id="div7" class="case-first">
+                    <p id="indice1" class="indice"></p>
+                </div>
+                <div id="div8" class="case-first">
+                    <p id="indice2" class="indice"></p>
+                </div>
+                <div id="div9" class="case-first">
+                </div>
+                <div id="div10" class="case-first">
                 </div>
             </div>
         </div>
-        <div class="credits">
-            <p>
-                Assets d'interieur :<br>Kenny
-            </p>
-            <p>
-                Assets d'exterieur :<br>Penzilla
-            </p>
-            <p>
-                Musique :<br>Walen
-            </p>
-            <button onclick="start_menu();">Menu</button>
+        <div id="div2" class="ligne">
+            <div id="div11" class="case">
+            </div>
+            <div id="div12" class="case">
+            </div>
+            <div id="div13" class="case">
+            </div>
+            <div id="div14" class="case">
+            </div>
+            <div id="div15" class="case">
+            </div>
         </div>
-        <div id="menu">
-  <div id="div1">
-    <div id="div5">
-      <div id="case-menu div0">
-      </div>
-    </div>
-    <div id="div6">
-      <div id="div7" class="case-first">
-        <p id="indice1" class="indice"></p>
-      </div>
-      <div id="div8" class="case-first">
-        <p id="indice2" class="indice"></p>
-      </div>
-      <div id="div9" class="case-first">
-      </div>
-      <div id="div10" class="case-first">
-      </div>
-    </div>
-  </div>
-  <div id="div2" class="ligne">
-    <div id="div11" class="case">
-    </div>
-    <div id="div12" class="case">
-    </div>
-    <div id="div13" class="case">
-    </div>
-    <div id="div14" class="case">
-    </div>
-    <div id="div15" class="case">
-    </div>
-  </div>
-  <div id="div3" class="ligne">
-    <div id="div16" class="case">
-    </div>
-    <div id="div17" class="case">
-    </div>
-    <div id="div18" class="case">
-    </div>
-    <div id="div19" class="case">
-    </div>
-    <div id="div20" class="case">
-    </div>
-  </div>
-</div>
-        <div class="vie" >
-            <img src="../assets/misc/heart.png" alt="heart" id="heart1">
-            <img src="../assets/misc/heart.png" alt="heart" id="heart2">
-            <img src="../assets/misc/heart.png" alt="heart" id="heart3">
-            <img src="../assets/misc/heart.png" alt="heart" id="heart4">
-            <img src="../assets/misc/heart.png" alt="heart" id="heart5">
+        <div id="div3" class="ligne">
+            <div id="div16" class="case">
+            </div>
+            <div id="div17" class="case">
+            </div>
+            <div id="div18" class="case">
+            </div>
+            <div id="div19" class="case">
+            </div>
+            <div id="div20" class="case">
+            </div>
         </div>
-<div class="fishgame"></div>
-<div class="fishgame-cursor"></div>
-<div class="fishgame-area"></div>
+    </div>
+    <div class="vie">
+        <img src="../assets/misc/heart.png" alt="heart" id="heart1">
+        <img src="../assets/misc/heart.png" alt="heart" id="heart2">
+        <img src="../assets/misc/heart.png" alt="heart" id="heart3">
+        <img src="../assets/misc/heart.png" alt="heart" id="heart4">
+        <img src="../assets/misc/heart.png" alt="heart" id="heart5">
+    </div>
+    <div class="fishgame"></div>
+    <div class="fishgame-cursor"></div>
+    <div class="fishgame-area"></div>
     <script>
         function start_game() {
             document.getElementById("linkmenu").disabled = true;
@@ -126,5 +130,6 @@
         {once : true});
         */
     </script>
-    </body>
+</body>
+
 </html>

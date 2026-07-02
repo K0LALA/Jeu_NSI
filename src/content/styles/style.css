@@ -1,212 +1,218 @@
-html, body {
-    overflow: hidden;
+html,
+body {
+  overflow: hidden;
 }
 
 body {
-    height: 100vh;
+  height: 100vh;
 }
 
 * {
-    user-select: none;
-    font-family: sans-serif;
-}
-
-canvas {
-    position: absolute;
-}
-
-#tiles {
-    position: absolute;
-}
-
-#tiles > * {
-    position: absolute;
-}
-
-#action-bar {
-    font-family: 'Segoe UI', Arial;
-    font-size: 42px;
-    text-transform: capitalize;
-    text-align: center;
-
-    position: absolute;
-    z-index: 1000;
-    left: 0;
-    bottom: 0;
-    margin-bottom: 25px;
-    width: 100%;
-}
-
-#dialogs {
-    position: absolute;
-    z-index:1001;
-    left: 0;
-    bottom: 0;
-    margin: 10px 0.5% 20px 0.5%;
-    padding: 10px 0;
-    width: 99%;
-
-    /* Change en grid par le serveur */
-    display: none;
-    grid-template-columns: 1fr auto;
-
-    background-color: #EAC797;
-    border-width: 10px;
-    border-radius: 5px;
-    border-color: #936B3E;
-}
-
-#dialogs > * {
-    font-size: 26px;
-    color: #936B3E;
-    margin: 10px;
+  user-select: none;
+  font-family: sans-serif;
 }
 
 img {
-    image-rendering: pixelated;
-    transition: filter linear 100ms;
+  image-rendering: pixelated;
+  transition: filter linear 100ms;
 }
 
+/* Menu principal */
 .background {
-    display: none;
-}
-
-/* Player */
-#img0 {
-    /* margin-left = (60px - 32px) / 2 
-    60px = health-bar.width
-    32px = self.width */
-    margin-left: 14px;
-}
-
-.highlight-blink {
-    animation-name: highlight-blinking;
-    animation-duration: 1s;
-    animation-iteration-count: infinite;
-    animation-direction: alternate;
-}
-
-@keyframes highlight-blinking {
-    0% {
-        filter: brightness(1.1);
-    }
-    100% {
-        filter: brightness(1.4);
-    }
+  display: none;
 }
 
 .credits {
-    display: none;
+  display: none;
 }
 
+/* Affichage carte */
+canvas {
+  position: absolute;
+}
+
+#tiles {
+  position: absolute;
+}
+
+#tiles > * {
+  position: absolute;
+}
+
+/* HUD */
+#action-bar {
+  font-family: "Segoe UI", Arial;
+  font-size: 42px;
+  text-transform: capitalize;
+  text-align: center;
+
+  position: absolute;
+  z-index: 1000;
+  left: 0;
+  bottom: 0;
+  margin-bottom: 25px;
+  width: 100%;
+}
+
+#dialogs {
+  position: absolute;
+  z-index: 1001;
+  left: 0;
+  bottom: 0;
+  margin: 10px 0.5% 20px 0.5%;
+  padding: 10px 0;
+  width: 99%;
+
+  /* Change en grid par le serveur */
+  display: none;
+  grid-template-columns: 1fr auto;
+
+  background-color: #eac797;
+  border-width: 10px;
+  border-radius: 5px;
+  border-color: #936b3e;
+}
+
+#dialogs > * {
+  font-size: 26px;
+  color: #936b3e;
+  margin: 10px;
+}
+
+/* Inventaire */
 #menu {
-position: absolute;
-display: flex;
-flex-direction: column;
-justify-content: center;
-gap: 2%;
-left: 25%;
-top: 25%;
-width: 50vw;
-height: 50vh;
-background-color: #808080e8;
-border: 1em inset #000000ad;
-z-index: 100;
-visibility: hidden;
-}
-#div1 {
-height: 30%;
-width: 100%;
-display: flex;
-flex-direction: row;
-}
-#div5 {
-width: 20%;
-height: 100%;
-display: flex;
-align-items: center;
-justify-content: center;
-}
-#div6 {
-width: 80%;
-height: 100%;
-display: flex;
-align-items: center;
-justify-content: space-around;
-}
-#case-menu {
-height: 80%;
-width: 60%;
-border: 7px inset #000000ad;
-}
-.case-first {
-height: 80%;
-width: 20%;
-border: 7px inset #000000ad;
-display: flex;
-align-items: center;
-justify-content: center;
-}
-.ligne {
-height: 30%;
-width: 100%;
-display: flex;
-flex-direction: row;
-justify-content: space-around;
-}
-.case {
-height: 80%;
-width: 16%;
-border: 7px inset #000000ad;
-display: flex;
-align-items: center;
-justify-content: center;
+  position: absolute;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  gap: 2%;
+  left: 25%;
+  top: 25%;
+  width: 50vw;
+  height: 50vh;
+  background-color: #808080e8;
+  border: 1em inset #000000ad;
+  z-index: 100;
+  visibility: hidden;
 }
 
+#div1 {
+  height: 30%;
+  width: 100%;
+  display: flex;
+  flex-direction: row;
+}
+
+#div5 {
+  width: 20%;
+  height: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+#div6 {
+  width: 80%;
+  height: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: space-around;
+}
+
+#case-menu {
+  height: 80%;
+  width: 60%;
+  border: 7px inset #000000ad;
+}
+
+.case-first {
+  height: 80%;
+  width: 20%;
+  border: 7px inset #000000ad;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.ligne {
+  height: 30%;
+  width: 100%;
+  display: flex;
+  flex-direction: row;
+  justify-content: space-around;
+}
+
+.case {
+  height: 80%;
+  width: 16%;
+  border: 7px inset #000000ad;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+/* Personnages */
 .vie {
-    position: absolute;
-    top: 0;
+  position: absolute;
+  top: 0;
 }
 
 .vie img {
-        width: 60px;
-        /*filter: grayscale(0.8);*/
-        z-index: 20;
-        position: relative;
+  width: 60px;
+  z-index: 20;
+  position: relative;
 }
 
 .heart-hit {
-    filter: grayscale(0.8);
+  filter: grayscale(0.8);
 }
 
 .hit {
-    filter: sepia(100%) brightness(0.9) contrast(0.9) hue-rotate(305deg) saturate(8);
+  filter: sepia(100%) brightness(0.9) contrast(0.9) hue-rotate(305deg) saturate(8);
 }
 
+.highlight-blink {
+  animation-name: highlight-blinking;
+  animation-duration: 1s;
+  animation-iteration-count: infinite;
+  animation-direction: alternate;
+}
+
+@keyframes highlight-blinking {
+  0% {
+    filter: brightness(1.1);
+  }
+  100% {
+    filter: brightness(1.4);
+  }
+}
+
+/* Quête champs */
 #quete_champs {
-    width: 100vw;
-    position: absolute;
-    z-index: 1000;
-    left: 0;
-    bottom: 0;
-    font-size: 64px;
-    text-align: center;
-    font-family: "Pixelify Sans", sans-serif;
-    color: black;
+  width: 100vw;
+  position: absolute;
+  z-index: 1000;
+  left: 0;
+  bottom: 0;
+  font-size: 64px;
+  text-align: center;
+  font-family: "Pixelify Sans", sans-serif;
+  color: black;
 }
 
 .pressed {
-    display: none;
+  display: none;
 }
 
 .indice {
-    position: relative;
-    top: 40%;
-    left: 65%;
-    font-size: 32px;
-    font-family: "Pixelify Sans", sans-serif;
+  position: relative;
+  top: 40%;
+  left: 65%;
+  font-size: 32px;
+  font-family: "Pixelify Sans", sans-serif;
 }
 
+/* Jeu de pêche */
 .fishgame {
     position: absolute;
     width: 20vw;
