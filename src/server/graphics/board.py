@@ -34,7 +34,7 @@ class Board:
         self.collisions = {}
         
         self.layers: dict[int, str] = {}
-        self.layer_bounds: dict[int, str] = {}
+        self.layer_bounds: dict[int, tuple[int]] = {}
         
         self.rendered_blocks: dict[set[tuple[int, int]]] = {}
                 
@@ -455,17 +455,23 @@ class EditorBoard(Board):
         if self.tool == "select" and self.p1 != None and self.p2 != None:
             self.selection(self.tile)
         
-    def create_layer(self, _, o: list[str, str, str, str]):
-        self.layers[int(o[0])] = o[1]
-        self.tile_pixel_sizes[int(o[0])] = int(o[2])
-        self.block_pixel_sizes[int(o[0])] = int(o[2]) * BLOCKS_SIZE
-        self.collisions[int(o[0])] = bool(o[3])
-        self.rendered_blocks[int(o[0])] = set()
+    def create_layer(self, _, o: list[str]):
+        index,tileset,size,has_collisions = o
+        index = int(index)
+        size = int(size)
+        has_collisions = bool(has_collisions)
         
-        self.base.execute("INSERT INTO layers VALUES (?,?,?,?,?);", (self.world, int(o[0]), o[1], int(o[2]), bool(o[3])))
+        self.layers[index] = tileset
+        self.layer_bounds[index] = self.add_layer(index)
+        self.tile_pixel_sizes[index] = size
+        self.block_pixel_sizes[index] = size * BLOCKS_SIZE
+        self.collisions[index] = has_collisions
+        self.rendered_blocks[index] = set()
+        
+        self.base.execute("INSERT INTO layers VALUES (?,?,?,?,?);", (self.world, index, tileset, size, has_collisions))
         self.link.commit()
         
-        self.helper.ws.insere("layer_" + o[0], "div", style={"z-index": int(o[0]) * 2}, parent="tiles")
+        self.helper.ws.insere("layer_" + str(index), "div", style={"z-index": index * 2}, parent="tiles")
         
     def delete_layer(self, _, o):
         if self.layer != int(o):
