@@ -137,6 +137,10 @@ function addTilesEvent() {
             transmettre("tile_changed", src.substring(src.lastIndexOf("/") + 1));
         });
     }
+    if (children.length == 1) {
+        children[0].classList.add("brush");
+        brush = children[0];
+    }
 }
 
 function tool(toolElement, newActiveTool) {

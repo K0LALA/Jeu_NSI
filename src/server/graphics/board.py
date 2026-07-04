@@ -447,6 +447,9 @@ class EditorBoard(Board):
         for file in sorted(os.listdir("content" + tileset_path)):
             self.helper.ws.insere("palette_" + str(i), "img", attr={'src':'../' + tileset_path + file}, parent="tileset")
             i += 1
+
+        if i == 1:
+            self.tile = file
             
         self.helper.ws.injecte("addTilesEvent();")
         
