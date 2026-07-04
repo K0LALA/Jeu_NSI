@@ -465,11 +465,11 @@ class EditorBoard(Board):
         has_collisions = bool(has_collisions)
         
         self.layers[index] = tileset
-        self.layer_bounds[index] = self.add_layer(index)
         self.tile_pixel_sizes[index] = size
         self.block_pixel_sizes[index] = size * BLOCKS_SIZE
         self.collisions[index] = has_collisions
         self.rendered_blocks[index] = set()
+        self.layer_bounds[index] = self.add_layer(index)
         
         self.base.execute("INSERT INTO layers VALUES (?,?,?,?,?);", (self.world, index, tileset, size, has_collisions))
         self.link.commit()
